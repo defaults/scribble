@@ -10,6 +10,7 @@ import datetime
 
 import model
 import markdown
+import settings
 
 
 from google.appengine.api import mail

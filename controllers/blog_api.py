@@ -11,7 +11,8 @@ from webapp2_extras import routes
 from webapp2_extras import sessions
 from google.appengine.datastore.datastore_query import Cursor
 
-from vendors import markdown
+from helpers import markdown
+from helpers import short_url
 from models import model
 from config import config
 
@@ -138,7 +139,7 @@ class ArticleHandler(BlogHandler):
             article.url = re.sub(
                         r'[/|!|"|:|;|.|%|^|&|*|(|)|@|,|{|}|+|=|_|?|<|>]',
                         'p', article.tittle).replace(' ', '-').lower()
-            article.short_url = BlogHandler.url_shortner(article.url)
+            article.short_url = 'hii'
             article.put()
             self.send_success(article)
         except Exception as e:
@@ -289,11 +290,20 @@ class UrlShortnerHandler(BlogHandler):
         Exposed as `GET /api/short?short_url=<shortUrl>`
         """
         try:
-            query_url = self.request.get('short_url')
-            url = model.ShortUrl \
-                .query(model.ShortUrl.short_url == query_url).get()
-            print query_url
-            self.send_success(url)
+            short_url_string = self.request.get('short_url')
+            long_url_string = self.request.get('long_url')
+            if short_url_string:
+                short_url_id = short_url.saturate(short_url_string)
+                short_url_obj = model.ShortUrl.get_by_id(short_url_id)
+                short_url_obj.short_url = short_url\
+                    .dehydrate(short_url_obj.key.id())
+                self.send_success(short_url_obj)
+            elif long_url_string:
+                short_url_obj = model.ShortUrl \
+                    .query(model.ShortUrl.full_url == long_url).get()
+                short_url_obj.short_url = short_url\
+                    .dehydrate(short_url_obj.key.id())
+                self.send_success(short_url_obj)
         except Exception as e:
             self.send_error(500, e)
 
@@ -303,11 +313,20 @@ class UrlShortnerHandler(BlogHandler):
         Exposed as `POST /api/short>`
         """
         try:
-            short_url = model.ShortUrl()
-            short_url.from_json(self.request.body)
-            short_url.short_url = BlogHandler.url_shortner(short_url.full_url)
-            short_url.put()
-            self.send_success(short_url)
+            short_url_obj = model.ShortUrl()
+            short_url_obj.from_json(self.request.body)
+            short_url_exists = \
+                model.ShortUrl.query(model.ShortUrl.full_url ==
+                                     short_url_obj.full_url).get()
+            if short_url_exists:
+                short_url_link = short_url.dehydrate(short_url_exists.key.id())
+                short_url_exists.short_url = short_url_link
+                self.send_success(short_url_exists)
+            else:
+                short_url_obj.put()
+                short_url_link = short_url.dehydrate(short_url_obj.key.id())
+                short_url_obj.short_url = short_url_link
+                self.send_success(short_url_obj)
         except Exception as e:
             self.send_error(500, e)
 
@@ -318,10 +337,10 @@ class UrlShortnerHandler(BlogHandler):
         """
         try:
             id = kwargs['id']
-            short_url = model.ShortUrl.get_by_id(long(id))
-            if short_url:
-                short_url.soft_deleted = True
-                short_url.put()
+            short_url_obj = model.ShortUrl.get_by_id(long(id))
+            if short_url_obj:
+                short_url_obj.soft_deleted = True
+                short_url_obj.put()
                 self.send_success({'message': 'sucess'})
             else:
                 raise IndexError

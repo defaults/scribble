@@ -17,7 +17,6 @@ class JsonifiableEncoder(json.JSONEncoder):
         if isinstance(obj, Jsonifiable):
             result = json.loads(obj.to_json())
             return result
-            return json.JSONEncoder.default(self, obj)
 
 
 class Jsonifiable:

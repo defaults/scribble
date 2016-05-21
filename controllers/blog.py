@@ -9,7 +9,7 @@ from google.appengine.api import mail
 from webapp2_extras import jinja2
 from webapp2_extras import routes
 
-from vendors import markdown
+from helpers import markdown
 from models import model
 from config import config
 from controllers import blog_api
@@ -168,5 +168,11 @@ class WriteHandler(BlogHandler):
 
 
 class DashboardHandler(BlogHandler):
+    def get(self):
+        pass
+
+
+class ShortUrlHandler(BlogHandler):
+    """short url handler implementation"""
     def get(self):
         pass

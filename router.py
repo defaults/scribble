@@ -38,6 +38,10 @@ app = webapp2.WSGIApplication([
             handler=blog.DashboardHandler, name='dashboard',
             strict_slash=True),
         routes.RedirectRoute(
+            '/short/<short_url>',
+            handler=blog.ShortUrlHandler, name='short_url',
+            strict_slash=True),
+        routes.RedirectRoute(
             '/',
             handler=blog.ArticlesListHandler, name='blog',
             strict_slash=True),

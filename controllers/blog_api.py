@@ -14,7 +14,6 @@ from google.appengine.datastore.datastore_query import Cursor
 from vendors import markdown
 from models import model
 from config import config
-from controllers import server
 
 
 class JsonRestHandler(webapp2.RequestHandler):
@@ -49,7 +48,7 @@ class JsonRestHandler(webapp2.RequestHandler):
             self.response.out.write('[]')
 
 
-class BlogHandler(server.BaseHandler):
+class BlogHandler(JsonRestHandler):
     """Base handler for blog"""
 
     def __init__(self, request, response):
@@ -79,7 +78,7 @@ class BlogHandler(server.BaseHandler):
         return short_url
 
 
-class ArticleHandler(BlogHandler, JsonRestHandler):
+class ArticleHandler(BlogHandler):
     """Article handler - Provides an api for working with articles"""
 
     def all_articles(self):
@@ -185,7 +184,7 @@ class ArticleHandler(BlogHandler, JsonRestHandler):
             self.send_error(500, e)
 
 
-class SubscriberHandler(BlogHandler, JsonRestHandler):
+class SubscriberHandler(BlogHandler):
     """
     Handler for subscribers - Exposes GET, POST, PATCH,
     DELETE for `/api/subscriber`
@@ -232,7 +231,7 @@ class SubscriberHandler(BlogHandler, JsonRestHandler):
             self.send_error(500, e)
 
 
-class TagHandler(BlogHandler, JsonRestHandler):
+class TagHandler(BlogHandler):
     """
     Blog tag handler -
     Exposes api for GET, POST, DELETE
@@ -278,7 +277,7 @@ class TagHandler(BlogHandler, JsonRestHandler):
             self.send_error(500, e)
 
 
-class UrlShortnerHandler(BlogHandler, JsonRestHandler):
+class UrlShortnerHandler(BlogHandler):
     """
     URL shortner API handler -
     Exposes GET and POST API

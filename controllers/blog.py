@@ -12,12 +12,30 @@ from webapp2_extras import routes
 from vendors import markdown
 from models import model
 from config import config
-from controllers import server
 from controllers import blog_api
 
 
 # base handler
-class BlogHandler(server.BaseHandler):
+class BlogHandler(webapp2.RequestHandler):
+
+    @webapp2.cached_property
+    def jinja2(self):
+        """Returns a Jinja2 renderer cached in the app registry."""
+        return jinja2.get_jinja2(app=self.app)
+
+    def render_response(self, _template, **params):
+        """Renders a template and writes the result to the response."""
+        temp = self.jinja2.render_template(_template, **params)
+        self.response.write(temp)
+
+    def send_email(self, emailTo, emailSubject, emailBody):
+        """method to send mail"""
+        mail.send_mail(sender=config.admin['admin_mail'],
+                       to=emailTo,
+                       subject=emailSubject,
+                       body=emailBody)
+
+        return
 
     def authentication(self):
         verify = model.Auth.query().get()

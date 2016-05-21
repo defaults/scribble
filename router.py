@@ -2,7 +2,6 @@ import logging
 
 import webapp2
 
-from controllers import server
 from controllers import blog
 from webapp2_extras import jinja2
 from webapp2_extras import routes
@@ -19,7 +18,6 @@ def error(request, response, exception):
 
 
 app = webapp2.WSGIApplication([
-    routes.DomainRoute('blog.vikashkumar.me', [
         routes.RedirectRoute(
             '/write',
             handler=blog.BlogHandler,
@@ -43,7 +41,6 @@ app = webapp2.WSGIApplication([
             '/',
             handler=blog.ArticlesListHandler, name='blog',
             strict_slash=True),
-    ])
 ])
 
 # errors

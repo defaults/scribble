@@ -19,10 +19,15 @@ def error(request, response, exception):
 
 app = webapp2.WSGIApplication([
         routes.RedirectRoute(
-            '/write',
-            handler=blog.BlogHandler,
-            name='authentication',
-            handler_method='authentication', strict_slash=True),
+            '/auth/login',
+            handler=blog.AuthenticationHandler,
+            name='login',
+            handler_method='login', strict_slash=True),
+        routes.RedirectRoute(
+            '/auth/logout',
+            handler=blog.AuthenticationHandler,
+            name='logout',
+            handler_method='logout', strict_slash=True),
         routes.RedirectRoute(
             '/write/<token>/',
             handler=blog.WriteHandler, name='write', strict_slash=True),

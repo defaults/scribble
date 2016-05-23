@@ -37,32 +37,6 @@ class BlogHandler(webapp2.RequestHandler):
 
         return
 
-    def authentication(self):
-        verify = model.Auth.query().get()
-        if verify:
-                params = {
-                    'page': 'write',
-                    'pending': 'pending'
-                }
-        else:
-            gtoken = ''.join(random.choice(string.ascii_uppercase +
-                                           string.digits) for _ in range(20))
-            save = model.Auth(token=gtoken)
-            save.put()
-
-            to = config.admin['admin_name'] + ' ' + '<' + \
-                config.admin['admin_mail'] + '>'
-            subject = 'Link to write blog'
-            body = 'https://blog.vikashkumar.me/write/{0}'.format(gtoken)
-
-            self.sendEmail(to, subject, body)
-
-            params = {
-                'page': 'token'
-            }
-
-        self.render_response('write.html', **params)
-
     # function to resend blog mail
     def resendMail(self):
         verify = model.Auth.query().get()
@@ -80,6 +54,17 @@ class BlogHandler(webapp2.RequestHandler):
 
         self.sendEmail(to, subject, body)
         self.response.out.write(json.dumps({'status': 'success'}))
+
+
+class AuthenticationHandler(BlogHandler):
+    def login(self):
+        pass
+
+    def logout(self):
+        pass
+
+    def is_authenticated(self):
+        pass
 
 
 # handler for blog

@@ -52,13 +52,8 @@ class JsonRestHandler(webapp2.RequestHandler):
 class BlogHandler(JsonRestHandler):
     """Base handler for blog"""
 
-    def __init__(self, request, response):
-        # Set self.request, self.response and self.app.
-        self.initialize(request, response)
-
-    def handle_dispatch():
-        """custom dispatch handler"""
-        # TODO: format return to JSON here
+    def dispatch(self):
+        # Get a session store for this request.
         self.session_store = sessions.get_store(request=self.request)
 
         try:
@@ -67,6 +62,11 @@ class BlogHandler(JsonRestHandler):
         finally:
             # Save all sessions.
             self.session_store.save_sessions(self.response)
+
+    @webapp2.cached_property
+    def session(self):
+        # Returns a session using the default cookie key.
+        return self.session_store.get_session()
 
     @staticmethod
     def url_shortner(full_url):
@@ -77,6 +77,20 @@ class BlogHandler(JsonRestHandler):
                               short_url=short_url)
         save.put()
         return short_url
+
+class AuthenticationHandler(BlogHandler):
+    """authentication handler - handles login and logout"""
+    def __init__(self, arg):
+        self.arg = arg
+
+    def login(self):
+        pass
+
+    def logout(self):
+        pass
+
+    def is_authenticated(self):
+        pass
 
 
 class ArticleHandler(BlogHandler):

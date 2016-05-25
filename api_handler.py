@@ -7,6 +7,7 @@ from controllers import blog_api
 
 
 config = {}
+
 config['webapp2_extras.sessions'] = {
     'secret_key': 'some-secret-key',
 }

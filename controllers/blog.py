@@ -61,7 +61,7 @@ class AuthenticationHandler(BlogHandler):
         pass
 
     def logout(self):
-        pass
+        self.redirect('login')
 
     def is_authenticated(self):
         pass

@@ -59,7 +59,13 @@ app = webapp2.WSGIApplication([
             handler=blog_api.UrlShortnerHandler, name='delete_short',
             methods=['DELETE'], strict_slash=True),
         routes.RedirectRoute(
-            '/auth',
-            handler=blog_api.BlogHandler,
-            name='auth', handler_method='authentication', strict_slash=True),
+            '/api/auth/login',
+            handler=blog_api.AuthenticationHandler,
+            name='login',
+            handler_method='login', strict_slash=True),
+        routes.RedirectRoute(
+            '/api/auth/logout',
+            handler=blog_api.AuthenticationHandler,
+            name='logout',
+            handler_method='logout', strict_slash=True),
     ], config=config, debug=True)

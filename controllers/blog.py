@@ -13,6 +13,7 @@ from helpers import markdown
 from models import model
 from config import config
 from controllers import blog_api
+from controllers import session
 
 
 # base handler

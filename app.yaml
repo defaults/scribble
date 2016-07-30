@@ -1,4 +1,4 @@
-application: share-blogging-app
+application: scribble
 version: 1
 runtime: python27
 threadsafe: true

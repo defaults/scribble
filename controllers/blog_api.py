@@ -13,6 +13,7 @@ from google.appengine.datastore.datastore_query import Cursor
 
 from helpers import markdown
 from helpers import short_url
+# from controllers import session
 from models import model
 from config import config
 
@@ -58,6 +59,7 @@ class BlogHandler(JsonRestHandler):
 
         try:
             # Dispatch the request.
+            self.request.headers['name'] = 'gfgfgg'
             webapp2.RequestHandler.dispatch(self)
         finally:
             # Save all sessions.
@@ -80,14 +82,25 @@ class BlogHandler(JsonRestHandler):
 
 class AuthenticationHandler(BlogHandler):
     """authentication handler - handles login and logout"""
-    def __init__(self, arg):
-        self.arg = arg
-
     def login(self):
-        pass
+        auth = 'jghfghufgfuifidofs'
+        self.session['user'] = self.request.get('name')
+        self.session['auth_token'] = auth
+
+        self.response.set_cookie('test', auth, max_age=360, path='/api',
+                    domain='localhost:9080')
+
+        self.response.headers['X-AUTH-TOKEN'] = auth
+
+        print (self.session)
+        self.send_success('sucess')
 
     def logout(self):
-        pass
+        self.request.cookies.get('test')
+
+        print (self.session)
+
+        self.send_success('sucess')
 
     def is_authenticated(self):
         pass

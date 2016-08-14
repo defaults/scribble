@@ -19,12 +19,12 @@ def error(request, response, exception):
 
 app = webapp2.WSGIApplication([
         routes.RedirectRoute(
-            '/auth/login',
+            '/login',
             handler=blog.AuthenticationHandler,
             name='login',
             handler_method='login', strict_slash=True),
         routes.RedirectRoute(
-            '/auth/logout',
+            '/logout',
             handler=blog.AuthenticationHandler,
             name='logout',
             handler_method='logout', strict_slash=True),

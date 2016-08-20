@@ -29,7 +29,7 @@ app = webapp2.WSGIApplication([
             name='logout',
             handler_method='logout', strict_slash=True),
         routes.RedirectRoute(
-            '/write/<token>/',
+            '/auth/<token>/',
             handler=blog.WriteHandler, name='write', strict_slash=True),
         routes.RedirectRoute(
             '/<article_url>/',

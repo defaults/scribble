@@ -82,16 +82,32 @@ class LoginHandler():
                 token_exchange_result['access_token']
             me_detail_request = urllib2.urlopen(me_endpoint_url)
             me_detail_response = json.loads(me_detail_request
-                                                  .read().decode('utf-8'))
+                                            .read().decode('utf-8'))
 
             if me_detail_response['phone']['number'] == config.admin['mobile']:
                 return ({"phone_no": me_detail_response['phone']})
             else:
                 raise Exception('erro', 'mobile number not allowed')
 
-
     def email_login(self):
         email = config.admin['admin_mail']
+        verify = model.Auth.query(model.Auth.type == 'email_token',
+                                  model.auth.soft_deleted == false).get()
+
+        if not verify:
+            token = ''.join(random.choice(string.ascii_uppercase +
+                                          string.digits) for _ in range(20))
+            save = model.Auth(token=token)
+            save.put()
+
+        auth_url = uri_for('login_api', page='email', format=token)
+        to = config.admin['admin_name'] + ' ' + '<' + \
+            config.admin['admin_mail'] + '>'
+        subject = 'Link to write blog'
+        body = 'https://blog.vikashkumar.me/write/{0}'.format(verify.token)
+
+        self.sendEmail(to, subject, body)
+        return ({'status': 'success'})
 
     class CSRFHandlar(object):
         """docstring for CSRFHandlar."""

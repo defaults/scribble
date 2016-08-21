@@ -1,3 +1,6 @@
+import urllib2
+import urllib
+
 from config import config
 # from Cookie import CookieError, SimpleCookie
 # from base64 import b64decode, b64encode

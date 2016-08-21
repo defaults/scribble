@@ -13,7 +13,7 @@ from google.appengine.datastore.datastore_query import Cursor
 
 from helpers import markdown
 from helpers import short_url
-# from controllers import session
+from controllers import authentication
 from models import model
 from config import config
 
@@ -80,20 +80,24 @@ class BlogHandler(JsonRestHandler):
         save.put()
         return short_url
 
-class AuthenticationHandler(BlogHandler):
-    """authentication handler - handles login and logout"""
+
+class LoginApiHandler(BlogHandler):
+    """login api handler - handles login and logout"""
     def login(self):
-        auth = 'jghfghufgfuifidofs'
-        self.session['user'] = self.request.get('name')
-        self.session['auth_token'] = auth
+        code = self.request.get('code')
+        login_type = self.request.get('type')
+        csrf = self.request.get('csrf')
+        try:
+            if code and login_type is fb_accountkit:
+                authentication_response = \
+                    authentication.Login.fb_accountkit_login(code, csrf)
+            else:
+                authentication_response = \
+                    authentication.Login.email_login()
 
-        self.response.set_cookie('test', auth, max_age=360, path='/api',
-                    domain='localhost:9080')
-
-        self.response.headers['X-AUTH-TOKEN'] = auth
-
-        print (self.session)
-        self.send_success('sucess')
+            send_success(authentication_response)
+        except Exception as e:
+            send_error(400, e)
 
     def logout(self):
         self.request.cookies.get('test')
@@ -217,7 +221,6 @@ class SubscriberHandler(BlogHandler):
     Handler for subscribers - Exposes GET, POST, PATCH,
     DELETE for `/api/subscriber`
     """
-
     def get(self):
         """G
         ET method for subscribers - Exposed as `GET /api/subscribers`

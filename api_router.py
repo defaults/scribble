@@ -60,12 +60,12 @@ app = webapp2.WSGIApplication([
             methods=['DELETE'], strict_slash=True),
         routes.RedirectRoute(
             '/api/auth/login',
-            handler=blog_api.AuthenticationHandler,
+            handler=blog_api.LoginApiHandler,
             name='login',
             handler_method='login', methods=['POST'], strict_slash=True),
         routes.RedirectRoute(
             '/api/auth/logout',
-            handler=blog_api.AuthenticationHandler,
+            handler=blog_api.LoginApiHandler,
             name='logout',
             handler_method='logout', strict_slash=True),
     ], config=config, debug=True)

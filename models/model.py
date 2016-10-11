@@ -102,14 +102,6 @@ class Subscriber(ndb.Model, Jsonifiable):
     soft_deleted = ndb.BooleanProperty(default=False)
 
 
-class Auth(ndb.Model, Jsonifiable):
-    """Represents Authorisation token for verifing user"""
-    token = ndb.StringProperty()
-    created_on = ndb.DateTimeProperty(auto_now_add=True)
-    modified_on = ndb.DateTimeProperty()
-    soft_deleted = ndb.BooleanProperty(default=False)
-
-
 class ShortUrl(ndb.Model, Jsonifiable):
     """Represents short url for blog"""
     full_url = ndb.StringProperty()
@@ -122,6 +114,15 @@ class ShortUrl(ndb.Model, Jsonifiable):
 class Tag(ndb.Model, Jsonifiable):
     """Represents tags for blog"""
     tag = ndb.StringProperty()
+    created_on = ndb.DateTimeProperty(auto_now_add=True)
+    modified_on = ndb.DateTimeProperty()
+    soft_deleted = ndb.BooleanProperty(default=False)
+
+
+class Auth(ndb.Model, Jsonifiable):
+    """Represents Authorisation token for verifing user"""
+    token = ndb.StringProperty()
+    token_type = ndb.StringProperty()
     created_on = ndb.DateTimeProperty(auto_now_add=True)
     modified_on = ndb.DateTimeProperty()
     soft_deleted = ndb.BooleanProperty(default=False)

@@ -4,13 +4,7 @@ import webapp2
 from webapp2_extras import routes
 
 from controllers import blog_api
-
-
-config = {}
-
-config['webapp2_extras.sessions'] = {
-    'secret_key': 'some-secret-key',
-}
+from config import config
 
 app = webapp2.WSGIApplication([
         routes.RedirectRoute(
@@ -69,4 +63,4 @@ app = webapp2.WSGIApplication([
             handler=blog_api.LoginApiHandler,
             name='logout_api',
             handler_method='logout', strict_slash=True),
-    ], config=config, debug=True)
+    ], config=config.application_config, debug=True)

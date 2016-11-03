@@ -5,6 +5,7 @@ import webapp2
 from controllers import blog
 from webapp2_extras import jinja2
 from webapp2_extras import routes
+from config import config
 
 
 # method for handling errors
@@ -50,7 +51,7 @@ app = webapp2.WSGIApplication([
             '/',
             handler=blog.ArticlesListHandler, name='blog',
             strict_slash=True),
-])
+], config=config.application_config)
 
 # errors
 app.error_handlers[404] = error

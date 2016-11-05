@@ -57,7 +57,7 @@ app = webapp2.WSGIApplication([
             '/api/auth/login',
             handler=blog_api.LoginApiHandler,
             name='login_api',
-            handler_method='login', methods=['POST'], strict_slash=True),
+            handler_method='login', methods=['POST']),
         routes.RedirectRoute(
             '/api/auth/logout',
             handler=blog_api.LoginApiHandler,

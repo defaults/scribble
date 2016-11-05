@@ -21,12 +21,12 @@ def error(request, response, exception):
 app = webapp2.WSGIApplication([
         routes.RedirectRoute(
             '/login',
-            handler=blog.AuthenticationHandler,
+            handler=blog.LoginHandler,
             name='login',
             handler_method='login', strict_slash=True),
         routes.RedirectRoute(
             '/logout',
-            handler=blog.AuthenticationHandler,
+            handler=blog.LoginHandler,
             name='logout',
             handler_method='logout', strict_slash=True),
         routes.RedirectRoute(
@@ -51,7 +51,7 @@ app = webapp2.WSGIApplication([
             '/',
             handler=blog.ArticlesListHandler, name='blog',
             strict_slash=True),
-], config=config.application_config)
+], config=config.application_config, debug=True)
 
 # errors
 app.error_handlers[404] = error

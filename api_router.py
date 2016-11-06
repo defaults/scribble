@@ -1,5 +1,3 @@
-import logging
-
 import webapp2
 from webapp2_extras import routes
 
@@ -54,10 +52,15 @@ app = webapp2.WSGIApplication([
             handler=blog_api.UrlShortnerHandler, name='delete_short_api',
             methods=['DELETE'], strict_slash=True),
         routes.RedirectRoute(
+            '/api/auth/signup',
+            handler=blog_api.LoginApiHandler,
+            name='signup_api',
+            handler_method='signup', methods=['POST'], strict_slash=True),
+        routes.RedirectRoute(
             '/api/auth/login',
             handler=blog_api.LoginApiHandler,
             name='login_api',
-            handler_method='login', methods=['POST']),
+            handler_method='login', methods=['POST'], strict_slash=True),
         routes.RedirectRoute(
             '/api/auth/logout',
             handler=blog_api.LoginApiHandler,

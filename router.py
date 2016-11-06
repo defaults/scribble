@@ -1,5 +1,4 @@
 import logging
-
 import webapp2
 
 from controllers import blog
@@ -53,6 +52,6 @@ app = webapp2.WSGIApplication([
             strict_slash=True),
 ], config=config.application_config, debug=True)
 
-# errors
+# error handlers
 app.error_handlers[404] = error
 app.error_handlers[500] = error

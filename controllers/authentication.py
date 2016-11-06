@@ -1,63 +1,34 @@
 import urllib2
 import urllib
+import json
+
+import webapp2
+from webapp2_extras import auth
+from webapp2_extras import sessions
+from webapp2_extras.auth import InvalidAuthIdError
 
 from config import config
-# from Cookie import CookieError, SimpleCookie
-# from base64 import b64decode, b64encode
-# import datetime
-# import hashlib
-# import hmac
-# import logging
-# import pickle
-# import os
-# import threading
-# import time
-#
-# from google.appengine.api import memcache
-# from google.appengine.ext import db
-#
-# # Configurable cookie options
-# COOKIE_NAME_PREFIX = "SesS"  # identifies a cookie as being one used by gae-sessions (so you can set cookies too)
-# COOKIE_PATH = "/"
-# DEFAULT_COOKIE_ONLY_THRESH = 10240  # 10KB: GAE only allows ~16000B in HTTP header - leave ~6KB for other info
-# DEFAULT_LIFETIME = datetime.timedelta(days=7)
-#
-# _tls = threading.local()
-#
-#
-# def get_current_session():
-#     """Returns the session associated with the current request."""
-#     return _tls.current_session
-#
-#
-# def set_current_session(session):
-#     """Sets the session associated with the current request."""
-#     _tls.current_session = session
-#
-#
-# def is_gaesessions_key(k):
-#     return k.startswith(COOKIE_NAME_PREFIX)
-#
-#
-# class SessionModel(db.Model):
-#     """Contains session data.  key_name is the session ID and pdump contains a
-#     pickled dictionary which maps session variables to their values."""
-#     pdump = ndb.BlobProperty()
-#
-#
-# class RequestHandler(webapp2.RequestHandler):
-#     """docstring for RequestHandler."""
-#     def __init__(self, arg):
-#         super(RequestHandler, self).__init__()
-#         self.arg = arg
 
 
-class LoginHandler():
+def authenticated(handler):
+    """
+        Decorator that checks if there's a user associated with the
+        current session. Will fail if there's no session present.
+    """
+    def check_authentication(self, *args, **kwargs):
+        auth = self.auth
+        if not auth.get_user_by_session():
+            self.redirect(self.uri_for('login'), abort=True)
+        else:
+            return handler(self, *args, **kwargs)
+
+        return check_authentication
+
+
+class LoginServicesHandler():
     """docstring for LoginHandler."""
-    def __init__(self, arg):
-        super(LoginHandler, self).__init__()
-        self.arg = arg
 
+    # fb accountkit login method
     def fb_accountkit_login(self, code, csrf):
         api_version = config.fb_account_kit['api_version']
         app_id = config.fb_account_kit['app_id']
@@ -85,10 +56,13 @@ class LoginHandler():
                                             .read().decode('utf-8'))
 
             if me_detail_response['phone']['number'] == config.admin['mobile']:
-                return ({"phone_no": me_detail_response['phone']})
+                return ({"user": me_detail_response['phone']})
             else:
-                raise Exception('erro', 'mobile number not allowed')
+                raise Exception('error', 'mobile number not allowed')
+        else:
+            raise Exception('error', 'invalid CSRF token')
 
+    # email based login method
     def email_login(self):
         email = config.admin['admin_mail']
         verify = model.Auth.query(model.Auth.type == 'email_token',
@@ -106,32 +80,39 @@ class LoginHandler():
         subject = 'Link to write blog'
         body = 'https://blog.vikashkumar.me/write/{0}'.format(verify.token)
 
-        self.sendEmail(to, subject, body)
+        # helpers.send_email(to, subject, body)
         return ({'status': 'success'})
 
-    class CSRFHandlar(object):
-        """docstring for CSRFHandlar."""
-        def __init__(self, arg):
-            super(CSRFHandlar, self).__init__()
-            self.arg = arg
+    # github oauth login method
+    def github_oauth_login(self):
+        pass
 
-        def generate_csrf(self):
-            pass
 
-        def verify_csrf(self):
-            pass
+class CSRFHandlar(object):
+    """docstring for CSRFHandlar."""
 
-    class AuthenticationHandler(object):
-        """docstring for AuthenticationHandler."""
-        def __init__(self, arg):
-            super(AuthenticationHandler, self).__init__()
-            self.arg = arg
+    def generate_csrf(self):
+        pass
 
-        def authenticate(self):
-            pass
+    def verify_csrf(self):
+        pass
 
-        def deauthenticate(self):
-            pass
 
-        def authenticated(self):
-            pass
+class AuthenticationHandler(webapp2.RequestHandler):
+    """docstring for AuthenticationHandler."""
+
+    @webapp2.cached_property
+    def auth(self):
+        """Shortcut to access the auth instance as a property."""
+        return auth.get_auth()
+
+    @webapp2.cached_property
+    def user_info(self):
+        """Shortcut to access a subset of the user attributes that are stored
+        in the session.
+        The list of attributes to store in the session is specified in
+        config['webapp2_extras.auth']['user_attributes'].
+        :returns
+            A dictionary with most user information
+        """
+        return self.auth.get_user_by_session()

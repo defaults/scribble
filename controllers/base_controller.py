@@ -30,15 +30,14 @@ class BaseHandler(webapp2.RequestHandler):
     """docstring for BaseHandler."""
 
     def dispatch(self):
-        # Get a session store for this request.
+        # Get a session store for this request
         self.session_store = sessions.get_store(request=self.request)
 
         try:
-            # Dispatch the request.
-            self.request.headers['name'] = 'gfgfgg'
+            # Dispatch the request
             webapp2.RequestHandler.dispatch(self)
         finally:
-            # Save all sessions.
+            # Save all sessions
             self.session_store.save_sessions(self.response)
 
     @webapp2.cached_property

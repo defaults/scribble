@@ -11,32 +11,15 @@ from webapp2_extras import routes
 
 from helpers import markdown
 from models import model
+from webapp2_extras import auth
+from webapp2_extras import sessions
 from config import config
-from controllers import blog_api
-from controllers import session
+from controllers import authentication
+from controllers import base_controller
 
 
 # base handler
-class BlogHandler(webapp2.RequestHandler):
-
-    @webapp2.cached_property
-    def jinja2(self):
-        """Returns a Jinja2 renderer cached in the app registry."""
-        return jinja2.get_jinja2(app=self.app)
-
-    def render_response(self, _template, **params):
-        """Renders a template and writes the result to the response."""
-        temp = self.jinja2.render_template(_template, **params)
-        self.response.write(temp)
-
-    def send_email(self, emailTo, emailSubject, emailBody):
-        """method to send mail"""
-        mail.send_mail(sender=config.admin['admin_mail'],
-                       to=emailTo,
-                       subject=emailSubject,
-                       body=emailBody)
-
-        return
+class BlogHandler(base_controller.BaseHandler):
 
     # function to resend blog mail
     def resendMail(self):
@@ -57,15 +40,21 @@ class BlogHandler(webapp2.RequestHandler):
         self.response.out.write(json.dumps({'status': 'success'}))
 
 
-class AuthenticationHandler(BlogHandler):
+class LoginHandler(BlogHandler):
     def login(self):
-        pass
+        auth = self.auth
+        if not auth.get_user_by_session():
+            params = {
+                'page': 'login',
+                'csrf': authentication.CSRFHandlar.generate_csrf()
+            }
+            self.render_response('login.html', **params)
+        else:
+            print auth.get_user_by_session()
+            self.response.write(auth.get_user_by_session())
 
     def logout(self):
         self.redirect('login')
-
-    def is_authenticated(self):
-        pass
 
 
 # handler for blog

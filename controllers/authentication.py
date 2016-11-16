@@ -1,6 +1,7 @@
 import urllib2
 import urllib
 import json
+import hashlib
 
 import webapp2
 from webapp2_extras import auth
@@ -92,7 +93,20 @@ class CSRFHandlar(object):
     """docstring for CSRFHandlar."""
 
     def generate_csrf(self):
-        pass
+        """
+        Generates CSRF token.
+
+        :returns:
+            :Random unguessable string.
+        """
+
+        # Create hash from random string plus salt.
+        hashed = hashlib.md5(uuid.uuid4().bytes + six.b(secret)).hexdigest()
+
+        # Each time return random portion of the hash.
+        span = 10
+        shift = random.randint(0, span)
+        return hashed[shift:shift - span - 1]
 
     def verify_csrf(self):
         pass

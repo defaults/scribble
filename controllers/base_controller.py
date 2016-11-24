@@ -90,21 +90,33 @@ class BaseHandler(webapp2.RequestHandler):
         temp = self.jinja2.render_template(_template, **params)
         self.response.write(temp)
 
-    @staticmethod
-    def send_email(receiver_address, email_subject, email_body):
+    def send_email(self, email, email_type, payload):
         """method to send mail"""
         # get email api authrised sender
         sender_address = (
                     '<{}@appspot.gserviceaccount.com>'.format(
                         app_identity.get_application_id()))
 
-        # send mail
+        subject, email_body = self.generate_email(email_type, payload)
+
         mail.send_mail(sender=sender_address,
-                       to=receiver_address,
-                       subject=email_subject,
+                       to=email,
+                       subject=subject,
                        body=email_body)
 
         return
+
+    def generate_email(email_type, payload):
+        """generates email body
+        :params email_type:
+            type of email
+        :params payload:
+            object having email payload
+
+        returns:
+            text/html
+        """
+        pass
 
 
 class JsonRestHandler(BaseHandler):

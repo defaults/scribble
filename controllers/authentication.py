@@ -1,6 +1,7 @@
 import urllib2
 import urllib
 import json
+import datetime
 import hashlib
 
 import webapp2
@@ -26,11 +27,19 @@ def authenticated(handler):
         return check_authentication
 
 
-class LoginServicesHandler():
-    """docstring for LoginHandler."""
+class LoginServicesHandler(base_controller.BaseHandler):
+    """login handlar - handler all types of login."""
 
-    # fb accountkit login method
-    def fb_accountkit_login(self, code, csrf):
+    def accountkit_login(self, code, csrf):
+        """Initialtes fb accountkit mobile no based login
+
+        :params code:
+            code to verify login request
+        :params csrf:
+            csrf nonce
+        :returns:
+            logged in mobile_no
+        """
         api_version = config.fb_account_kit['api_version']
         app_id = config.fb_account_kit['app_id']
         app_secret = config.fb_account_kit['app_secret']
@@ -56,37 +65,69 @@ class LoginServicesHandler():
             me_detail_response = json.loads(me_detail_request
                                             .read().decode('utf-8'))
 
-            if me_detail_response['phone']['number'] == config.admin['mobile']:
-                return ({"user": me_detail_response['phone']})
-            else:
-                raise Exception('error', 'mobile number not allowed')
+            return me_detail_response['phone']
         else:
             raise Exception('error', 'invalid CSRF token')
 
-    # email based login method
-    def email_login(self):
-        email = config.admin['admin_mail']
-        verify = model.Auth.query(model.Auth.type == 'email_token',
-                                  model.auth.soft_deleted == false).get()
+    def initiate_email_login(self, user):
+        """Initialtes email based login by sending verification mail
 
-        if not verify:
-            token = ''.join(random.choice(string.ascii_uppercase +
-                                          string.digits) for _ in range(20))
-            save = model.Auth(token=token)
-            save.put()
+        :params user:
+            user
+        :returns:
+            status(boolean)
+        """
+        user_id = user.get_id()
+        token = self.user_model.create_signup_token(user_id)
+        verification_url = self.uri_for(
+            'verification', type='signup', user_id=user_id,
+            signup_token=token, _full=True)
 
-        auth_url = uri_for('login_api', page='email', format=token)
-        to = config.admin['admin_name'] + ' ' + '<' + \
-            config.admin['admin_mail'] + '>'
-        subject = 'Link to write blog'
-        body = 'https://blog.vikashkumar.me/write/{0}'.format(verify.token)
+        valid_till = datetime.time.now()
 
-        # helpers.send_email(to, subject, body)
-        return ({'status': 'success'})
+        email_payload = {
+            'verification_url': verification_url,
+            'valid_till': valid_till
+        }
 
-    # github oauth login method
-    def github_oauth_login(self):
-        pass
+        self.send_email(user.email, email_type='signup', payload=email_payload)
+
+        return
+
+    def verify_user(self, user_id, signup_token, type):
+        “"""varifies user based on request type and email.
+            currently used for email login verification
+
+        :params user_id:
+            user Id of user
+        :params signup_token:
+            signup token
+        :params type:
+            verification type
+        :returns:
+            user if verified
+        """”
+        user, ts = self.user_model.get_by_auth_token(
+            int(user_id), signup_token, 'signup')
+
+        if not user:
+            logging.info(
+                'Could not find any user with id "%s" signup token "%s"',
+                user_id, signup_token)
+            raise Exception('error', 'Could not find any user')
+
+        # store user data in the session
+        self.auth.set_session(
+            self.auth.store.user_to_dict(user), remember=True)
+
+        if type == 'signup':
+            self.user_model.delete_signup_token(user.get_id(), signup_token)
+
+        if not user.verified:
+            user.verified = True
+            user.put()
+
+        return user
 
 
 class CSRFHandlar(object):

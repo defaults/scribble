@@ -13,62 +13,14 @@ from google.appengine.datastore.datastore_query import Cursor
 
 from helpers import markdown
 from helpers import short_url
-from controllers import authentication
 from models import model
 from config import config
+from controllers import authentication
+from controllers import base_controller
 
 
-class JsonRestHandler(webapp2.RequestHandler):
-    """
-    Base RequestHandler type which provides convenience methods for writing
-    JSON HTTP responses.
-    """
-    JSON_MIMETYPE = "application/json"
-
-    def send_error(self, code, message):
-        """
-        Convenience method to format an HTTP error response in a standard
-        format.
-        """
-        self.response.set_status(code, message)
-        self.response.out.write(message)
-        return
-
-    def send_success(self, obj=None):
-        """
-        Convenience method to format a PhotoHunt JSON HTTP response in a
-        standard format.
-        """
-        self.response.headers["Content-Type"] = "application/json"
-        if obj is not None:
-            if isinstance(obj, basestring):
-                self.response.out.write(obj)
-            else:
-                self.response.out.write(json.dumps(obj,
-                                        cls=model.JsonifiableEncoder))
-        else:
-            self.response.out.write('[]')
-
-
-class BlogHandler(JsonRestHandler):
-    """Base handler for blog"""
-
-    def dispatch(self):
-        # Get a session store for this request.
-        self.session_store = sessions.get_store(request=self.request)
-
-        try:
-            # Dispatch the request.
-            self.request.headers['name'] = 'gfgfgg'
-            webapp2.RequestHandler.dispatch(self)
-        finally:
-            # Save all sessions.
-            self.session_store.save_sessions(self.response)
-
-    @webapp2.cached_property
-    def session(self):
-        # Returns a session using the default cookie key.
-        return self.session_store.get_session()
+class BlogApiHandler(base_controller.JsonRestHandler):
+    """Base handler for blog API"""
 
     @staticmethod
     def url_shortner(full_url):
@@ -81,36 +33,86 @@ class BlogHandler(JsonRestHandler):
         return short_url
 
 
-class LoginApiHandler(BlogHandler):
+class LoginApiHandler(BlogApiHandler):
     """login api handler - handles login and logout"""
     def login(self):
-        code = self.request.get('code')
-        login_type = self.request.get('type')
-        csrf = self.request.get('csrf')
+        login_type = self.request.get('login_type')
+        csrf = self.request.get('csrf_nonce')
         try:
-            if code and login_type is fb_accountkit:
-                authentication_response = \
-                    authentication.Login.fb_accountkit_login(code, csrf)
-            else:
-                authentication_response = \
-                    authentication.Login.email_login()
+            if login_type == 'fb_accountkit':
+                code = self.request.get('code')
 
-            send_success(authentication_response)
+                authenticated_mobile_no = \
+                    authentication.LoginServicesHandler().accountkit_login(
+                        code, csrf)
+
+                user = self.user_model.get_by_mobile_no(
+                    authenticated_mobile_no)
+
+                self.final_processor(user)
+
+            elif login_type == 'email':
+                email = self.request.get('email')
+
+                user = self.user_model.get_by_email_address(email)
+
+                if not user and config.admin.email_address == email:
+                    self.user_model.create_user(config.admin)
+                authentication.LoginServicesHandler().initiate_email_login(
+                    email)
+
+                self.send_success({'status': 'success'})
+
+            else:
+                self.send_error(401, 'login type not supported')
+
         except Exception as e:
-            send_error(400, e)
+            self.send_error(500, e)
 
     def logout(self):
-        self.request.cookies.get('test')
+        self.auth.unset_session()
+        self.redirect_to('home')
 
-        print (self.session)
+    def create_user(self, username, name, email, mobile_no, verified=False):
+        status, created_user = self.user_model.create_user(
+                                        username,
+                                        ['email_address', 'mobile_no'],
+                                        name=name,
+                                        email_address=email,
+                                        mobile_no=mobile_no,
+                                        verified=varified)
 
-        self.send_success('sucess')
+        if status:
+            return created_user
+        else:
+            raise Exception('user creation failed')
 
-    def is_authenticated(self):
-        pass
+    def final_processor(user):
+        """finallly checks for valid user and redirects after login.
+        :param user:
+            user object
+        """
+        if user:
+            if not user.verified:
+                user.verified = True
+                user.put()
+            self.auth.set_session(
+                self.auth.store.user_to_dict(user))
+            self.redirect_to('dashboard')
+
+        elif config.admin['mobile_no'] == authenticated_mobile_no:
+            self.user_model.create_user(
+                config.admin, verified=True)
+            self.redirect_to('first_time_setup')
+
+        else:
+            self.send_error(404, {
+                    'status': 'failure',
+                    'message': 'user not recognised/allowed.'
+                })
 
 
-class ArticleHandler(BlogHandler):
+class ArticleHandler(BlogApiHandler):
     """Article handler - Provides an api for working with articles"""
 
     def all_articles(self):
@@ -207,7 +209,7 @@ class ArticleHandler(BlogHandler):
             if article:
                 article.soft_deleted = True
                 article.put()
-                self.send_success({'message': 'sucess'})
+                self.send_success({'status': 'success'})
             else:
                 raise IndexError
         except IndexError as ie:
@@ -216,7 +218,7 @@ class ArticleHandler(BlogHandler):
             self.send_error(500, e)
 
 
-class SubscriberHandler(BlogHandler):
+class SubscriberHandler(BlogApiHandler):
     """
     Handler for subscribers - Exposes GET, POST, PATCH,
     DELETE for `/api/subscriber`
@@ -253,7 +255,7 @@ class SubscriberHandler(BlogHandler):
             subscriber = model.Subscriber.get_by_id(long(id))
             if subscriber:
                 subscriber.soft_deleted = True
-                self.send_success({'message': 'sucess'})
+                self.send_success({'status': 'success'})
             else:
                 raise IndexError
         except IndexError as ie:
@@ -262,7 +264,7 @@ class SubscriberHandler(BlogHandler):
             self.send_error(500, e)
 
 
-class TagHandler(BlogHandler):
+class TagHandler(BlogApiHandler):
     """
     Blog tag handler -
     Exposes api for GET, POST, DELETE
@@ -299,16 +301,16 @@ class TagHandler(BlogHandler):
             if tag:
                 tag.soft_deleted = True
                 tag.put()
-                self.send_success({'message': 'sucess'})
+                self.send_success({'status': 'success'})
             else:
                 raise IndexError
-        except IndexError as ie:
+        except IndexError as e:
             self.send_error(404, 'wrong index')
         except Exception as e:
             self.send_error(500, e)
 
 
-class UrlShortnerHandler(BlogHandler):
+class UrlShortnerHandler(BlogApiHandler):
     """
     URL shortner API handler -
     Exposes GET and POST API
@@ -371,7 +373,7 @@ class UrlShortnerHandler(BlogHandler):
             if short_url_obj:
                 short_url_obj.soft_deleted = True
                 short_url_obj.put()
-                self.send_success({'message': 'sucess'})
+                self.send_success({'status': 'success'})
             else:
                 raise IndexError
         except IndexError as ie:

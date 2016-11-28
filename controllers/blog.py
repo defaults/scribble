@@ -45,13 +45,12 @@ class LoginHandler(BlogHandler):
         auth = self.auth
         if not auth.get_user_by_session():
             params = {
-                'page': 'login',
-                'csrf': authentication.CSRFHandlar.generate_csrf()
+                'page': 'login'
+
             }
             self.render_response('login.html', **params)
         else:
-            print auth.get_user_by_session()
-            self.response.write(auth.get_user_by_session())
+            self.redirect_to('/dashboard')
 
     def logout(self):
         self.redirect('login')

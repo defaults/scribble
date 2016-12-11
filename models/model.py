@@ -163,7 +163,6 @@ class User(webapp2_extras.appengine.auth.models.User):
 
             return status, user_data
 
-
     @classmethod
     def get_by_auth_token(cls, user_id, token, subject='auth'):
         """Returns a user object based on a user ID and token.
@@ -208,3 +207,30 @@ class User(webapp2_extras.appengine.auth.models.User):
             User object
         """
         return cls.query(cls.mobile_no == mobile_no).get()
+
+
+class XsrfSecret(db.Model):
+    """Model for datastore to store the XSRF secret."""
+    secret = db.StringProperty(required=True)
+
+    @staticmethod
+    def get():
+        """Retrieves the XSRF secret.
+
+        Tries to retrieve the XSRF secret from memcache, and if that fails,
+        falls back to getting it out of datastore. Note that the secret
+        should not be changed, as that would result in all issued
+        tokens becoming invalid.
+        """
+        secret = memcache.get('xsrf_secret')
+        if not secret:
+            xsrf_secret = XsrfSecret.all().get()
+            if not xsrf_secret:
+                secret = binascii.b2a_hex(os.urandom(16))
+                xsrf_secret = XsrfSecret(secret=secret)
+                xsrf_secret.put()
+
+                secret = xsrf_secret.secret
+                memcache.set('xsrf_secret', secret)
+
+        return secret

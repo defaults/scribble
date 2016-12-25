@@ -2,6 +2,7 @@ import json
 import logging
 import datetime
 import types
+import uuid
 from datetime import datetime
 import time
 import webapp2_extras.appengine.auth.models
@@ -139,6 +140,7 @@ class User(webapp2_extras.appengine.auth.models.User):
     """User model extending webapp2 auth expando user model"""
     email_address = ndb.StringProperty(indexed=True)
     mobile_no = ndb.StringProperty(indexed=True)
+    is_admin = ndb.BooleanProperty(indexed=True, default=False)
 
     @classmethod
     def create_user(cls, user_data, verified=False):
@@ -209,9 +211,18 @@ class User(webapp2_extras.appengine.auth.models.User):
         return cls.query(cls.mobile_no == mobile_no).get()
 
 
-class XsrfSecret(db.Model):
+class Config(db.Model):
     """Model for datastore to store the XSRF secret."""
-    secret = db.StringProperty(required=True)
+    csrf_secret = ndb.StringProperty(indexed=True, default=uuid.uuid4().hex())
+    session_secret_key = ndb.StringProperty(
+        indexed=True, default=uuid.uuid4().hex())
+    fb_accountkit_api_version = ndb.StringProperty(default='v1.0')
+    fb_accountkit_app_id = ndb.StringProperty(default='')
+    fb_accountkit_app_secret = ndb.StringProperty(default='')
+    fb_accountkit_me_endpoint_url = ndb.StringProperty(
+        default='https://graph.accountkit.com/v1.0/me')
+    fb_accountkit_token_exchange_url = ndb.StringProperty(
+        default='https://graph.accountkit.com/v1.0/access_token')
 
     @staticmethod
     def get():

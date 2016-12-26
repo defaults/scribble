@@ -211,11 +211,9 @@ class User(webapp2_extras.appengine.auth.models.User):
         return cls.query(cls.mobile_no == mobile_no).get()
 
 
-class Config(db.Model):
-    """Model for datastore to store the XSRF secret."""
-    csrf_secret = ndb.StringProperty(indexed=True, default=uuid.uuid4().hex())
-    session_secret_key = ndb.StringProperty(
-        indexed=True, default=uuid.uuid4().hex())
+class AuthConfig(db.Model, Jsonifiable):
+    """Model for datastore to store the Authentication config."""
+    google_analytics_id = ndb.StringProperty()
     fb_accountkit_api_version = ndb.StringProperty(default='v1.0')
     fb_accountkit_app_id = ndb.StringProperty(default='')
     fb_accountkit_app_secret = ndb.StringProperty(default='')
@@ -223,9 +221,30 @@ class Config(db.Model):
         default='https://graph.accountkit.com/v1.0/me')
     fb_accountkit_token_exchange_url = ndb.StringProperty(
         default='https://graph.accountkit.com/v1.0/access_token')
+    github_client_id = ndb.StringProperty(
+        default='')
+    github_client_secret = ndb.StringProperty(
+        default='')
+
+    @property
+    def self.is_fb_accountkit_login_enabled(self):
+        """return """
+        return bool(
+            self.fb_accountkit_app_id and self.fb_accountkit_app_secret)
+
+    @property
+    def self.github_login_enabled(self):
+        return bool(x=self.github_client_id and self.github_client_secret)
+
+
+class Config(ndb.Model):
+    csrf_secret_key = ndb.StringProperty(
+        indexed=True, default=uuid.uuid4().hex())
+    session_secret_key = ndb.StringProperty(
+        indexed=True, default=uuid.uuid4().hex())
 
     @staticmethod
-    def get():
+    def get_csrf_secret_key():
         """Retrieves the XSRF secret.
 
         Tries to retrieve the XSRF secret from memcache, and if that fails,
@@ -234,6 +253,28 @@ class Config(db.Model):
         tokens becoming invalid.
         """
         secret = memcache.get('xsrf_secret')
+        if not secret:
+            xsrf_secret = Config.all().get()
+            if not xsrf_secret:
+                secret = binascii.b2a_hex(os.urandom(16))
+                xsrf_secret = XsrfSecret(secret=secret)
+                xsrf_secret.put()
+
+                secret = xsrf_secret.secret
+                memcache.set('xsrf_secret', secret)
+
+        return secret
+
+    @staticmethod
+    def get_session_secret_key():
+        """Retrieves the session secret.
+
+        Tries to retrieve the session secret from memcache, and if that fails,
+        falls back to getting it out of datastore. Note that the secret
+        should not be changed, as that would result in all issued
+        tokens becoming invalid.
+        """
+        secret = memcache.get('session_secret')
         if not secret:
             xsrf_secret = XsrfSecret.all().get()
             if not xsrf_secret:

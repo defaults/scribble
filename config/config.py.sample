@@ -1,23 +1,27 @@
-project_name = 'My Blog'
-domain = ''
+import os
+from models import model
+from google.appengine.api import app_identity
 
-admin = {
-    'first_name': 'ADMIN_FIRST_NAME',
-    'last_name': 'ADMIN_LAST_NAME',
-    'email_address': '',            // defaults to admin mail for app
-    'mobile_no': '',
-    'time_zone': 'UTC'
+PRODUCTION = os.environ.get('SERVER_SOFTWARE', '').startswith('Google App Eng')
+DEBUG = DEVELOPMENT = not PRODUCTION
+
+APPLICATION_ID = app_identity.get_application_id()
+CURRENT_VERSION_ID = os.environ.get('CURRENT_VERSION_ID')
+CURRENT_VERSION_NAME = CURRENT_VERSION_ID.split('.')[0]
+
+CONFIG_DB = model.Config.get_master_db()
+
+CSRF_SECRET_KEY = 'YOUR_CSRF_SECRET_KEY'
+
+ADMIN = {
+    'FIRST_NAME': 'ADMIN_FIRST_NAME',
+    'LAST_NAME': 'ADMIN_LAST_NAME',
+    'EMAIL': '',                         // defaults to admin mail for app
+    'MOBILE': '',
+    'TIMEZONE': 'UTC'                   // defaults to UTC
 }
 
-fb_account_kit = {
-    'api_version': 'v1.0',
-    'app_id': 'APP_ID',
-    'app_secret': 'APP_SECRET',
-    'me_endpoint_url': 'https://graph.accountkit.com/v1.0/me',
-    'token_exchange_url': 'https://graph.accountkit.com/v1.0/access_token'
-}
-
-application_config = {
+APPLICATION_CONFIG = {
   'webapp2_extras.auth': {
     'user_model': 'models.model.User',
     'user_attributes': ['email_address', 'first_name', 'mobile_no', 'is_admin']

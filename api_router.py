@@ -66,4 +66,4 @@ app = webapp2.WSGIApplication([
             handler=blog_api.LoginApiHandler,
             name='logout_api',
             handler_method='logout', strict_slash=True),
-    ], config=config.application_config, debug=True)
+    ], config=config.APPLICATION_CONFIG, debug=True)

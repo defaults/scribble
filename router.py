@@ -50,7 +50,7 @@ app = webapp2.WSGIApplication([
             '/',
             handler=blog.ArticlesListHandler, name='blog',
             strict_slash=True),
-], config=config.application_config, debug=True)
+], config=config.APPLICATION_CONFIG, debug=True)
 
 # error handlers
 app.error_handlers[404] = error

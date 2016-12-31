@@ -9,41 +9,17 @@ from google.appengine.api import mail
 from webapp2_extras import jinja2
 from webapp2_extras import routes
 
-from vendors import markdown
+from helpers import markdown
 from models import model
+from webapp2_extras import auth
+from webapp2_extras import sessions
 from config import config
-from controllers import server
-from controllers import blog_api
+from controllers import authentication
+from controllers import base_controller
 
 
 # base handler
-class BlogHandler(server.BaseHandler):
-
-    def authentication(self):
-        verify = model.Auth.query().get()
-        if verify:
-                params = {
-                    'page': 'write',
-                    'pending': 'pending'
-                }
-        else:
-            gtoken = ''.join(random.choice(string.ascii_uppercase +
-                                           string.digits) for _ in range(20))
-            save = model.Auth(token=gtoken)
-            save.put()
-
-            to = config.admin['admin_name'] + ' ' + '<' + \
-                config.admin['admin_mail'] + '>'
-            subject = 'Link to write blog'
-            body = 'https://blog.vikashkumar.me/write/{0}'.format(gtoken)
-
-            self.sendEmail(to, subject, body)
-
-            params = {
-                'page': 'token'
-            }
-
-        self.render_response('write.html', **params)
+class BlogHandler(base_controller.BaseHandler):
 
     # function to resend blog mail
     def resendMail(self):
@@ -62,6 +38,22 @@ class BlogHandler(server.BaseHandler):
 
         self.sendEmail(to, subject, body)
         self.response.out.write(json.dumps({'status': 'success'}))
+
+
+class LoginHandler(BlogHandler):
+    def login(self):
+        auth = self.auth
+        if not auth.get_user_by_session():
+            params = {
+                'page': 'login'
+
+            }
+            self.render_response('login.html', **params)
+        else:
+            self.redirect_to('/dashboard')
+
+    def logout(self):
+        self.redirect('login')
 
 
 # handler for blog
@@ -150,5 +142,11 @@ class WriteHandler(BlogHandler):
 
 
 class DashboardHandler(BlogHandler):
+    def get(self):
+        pass
+
+
+class ShortUrlHandler(BlogHandler):
+    """short url handler implementation"""
     def get(self):
         pass

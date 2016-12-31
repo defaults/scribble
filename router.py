@@ -1,11 +1,10 @@
 import logging
-
 import webapp2
 
-from controllers import server
 from controllers import blog
 from webapp2_extras import jinja2
 from webapp2_extras import routes
+from config import config
 
 
 # method for handling errors
@@ -19,14 +18,18 @@ def error(request, response, exception):
 
 
 app = webapp2.WSGIApplication([
-    routes.DomainRoute('blog.vikashkumar.me', [
         routes.RedirectRoute(
-            '/write',
-            handler=blog.BlogHandler,
-            name='authentication',
-            handler_method='authentication', strict_slash=True),
+            '/login',
+            handler=blog.LoginHandler,
+            name='login',
+            handler_method='login', strict_slash=True),
         routes.RedirectRoute(
-            '/write/<token>/',
+            '/logout',
+            handler=blog.LoginHandler,
+            name='logout',
+            handler_method='logout', strict_slash=True),
+        routes.RedirectRoute(
+            '/auth/<token>/',
             handler=blog.WriteHandler, name='write', strict_slash=True),
         routes.RedirectRoute(
             '/<article_url>/',
@@ -40,12 +43,15 @@ app = webapp2.WSGIApplication([
             handler=blog.DashboardHandler, name='dashboard',
             strict_slash=True),
         routes.RedirectRoute(
+            '/short/<short_url>',
+            handler=blog.ShortUrlHandler, name='short_url',
+            strict_slash=True),
+        routes.RedirectRoute(
             '/',
             handler=blog.ArticlesListHandler, name='blog',
             strict_slash=True),
-    ])
-])
+], config=config.APPLICATION_CONFIG, debug=True)
 
-# errors
+# error handlers
 app.error_handlers[404] = error
 app.error_handlers[500] = error

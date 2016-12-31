@@ -11,62 +11,16 @@ from webapp2_extras import routes
 from webapp2_extras import sessions
 from google.appengine.datastore.datastore_query import Cursor
 
-from vendors import markdown
+from helpers import markdown
+from helpers import short_url
 from models import model
 from config import config
-from controllers import server
+from controllers import authentication
+from controllers import base_controller
 
 
-class JsonRestHandler(webapp2.RequestHandler):
-    """
-    Base RequestHandler type which provides convenience methods for writing
-    JSON HTTP responses.
-    """
-    JSON_MIMETYPE = "application/json"
-
-    def send_error(self, code, message):
-        """
-        Convenience method to format an HTTP error response in a standard
-        format.
-        """
-        self.response.set_status(code, message)
-        self.response.out.write(message)
-        return
-
-    def send_success(self, obj=None):
-        """
-        Convenience method to format a PhotoHunt JSON HTTP response in a
-        standard format.
-        """
-        self.response.headers["Content-Type"] = "application/json"
-        if obj is not None:
-            if isinstance(obj, basestring):
-                self.response.out.write(obj)
-            else:
-                self.response.out.write(json.dumps(obj,
-                                        cls=model.JsonifiableEncoder))
-        else:
-            self.response.out.write('[]')
-
-
-class BlogHandler(server.BaseHandler):
-    """Base handler for blog"""
-
-    def __init__(self, request, response):
-        # Set self.request, self.response and self.app.
-        self.initialize(request, response)
-
-    def handle_dispatch():
-        """custom dispatch handler"""
-        # TODO: format return to JSON here
-        self.session_store = sessions.get_store(request=self.request)
-
-        try:
-            # Dispatch the request.
-            webapp2.RequestHandler.dispatch(self)
-        finally:
-            # Save all sessions.
-            self.session_store.save_sessions(self.response)
+class BlogApiHandler(base_controller.JsonRestHandler):
+    """Base handler for blog API"""
 
     @staticmethod
     def url_shortner(full_url):
@@ -79,7 +33,90 @@ class BlogHandler(server.BaseHandler):
         return short_url
 
 
-class ArticleHandler(BlogHandler, JsonRestHandler):
+class LoginApiHandler(BlogApiHandler):
+    """login api handler - handles login and logout"""
+
+    @xsrf_protect
+    def login(self):
+        login_type = self.request.get('login_type')
+        try:
+            if login_type == 'fb_accountkit':
+                code = self.request.get('code')
+
+                authenticated_mobile_no = \
+                    authentication.LoginServicesHandler().accountkit_login(
+                        code, csrf)
+
+                user = self.user_model.get_by_mobile_no(
+                    authenticated_mobile_no)
+
+                self.final_processor(user, 'fb_accountkit',
+                                     authenticated_mobile_no)
+
+            elif login_type == 'email':
+                email = self.request.get('email')
+                user = self.user_model.get_by_email_address(email)
+                self.final_processor(user, 'email', email)
+
+                self.send_success({'status': 'success'})
+
+            else:
+                self.send_error(401, 'login type not supported')
+
+        except Exception as e:
+            self.send_error(500, e)
+
+    def logout(self):
+        self.auth.unset_session()
+        self.redirect_to('home')
+
+    def create_user(self, username, name, email, mobile_no, verified=False):
+        status, created_user = self.user_model.create_user(
+                                        username,
+                                        ['email_address', 'mobile_no'],
+                                        name=name,
+                                        email_address=email,
+                                        mobile_no=mobile_no,
+                                        verified=varified)
+
+        if status:
+            return created_user
+        else:
+            raise Exception('user creation failed')
+
+    def final_processor(user, login_type, authenticated_identifier):
+        """finallly checks for valid user and redirects after login.
+        :param user:
+            user object
+        :param login_type:
+            user login_type
+        :param authenticated_identifier:
+            user identifier by which user is authenticated
+        """
+        if user:
+            if not user.verified:
+                user.verified = True
+                user.put()
+            self.auth.set_session(
+                self.auth.store.user_to_dict(user))
+            self.redirect_to('dashboard')
+
+        elif (login_type == 'fb_accountkit' and
+              config.ADMIN['mobile_no'] == authenticated_identifier) or \
+            (login_type == 'email' and
+             config.ADMIN.mobile == authenticated_identifier):
+            self.user_model.create_user(
+                config.admin, verified=True)
+            self.redirect_to('first_time_setup')
+
+        else:
+            self.send_error(404, {
+                    'status': 'failure',
+                    'message': 'user not recognised/allowed.'
+                })
+
+
+class ArticleHandler(BlogApiHandler):
     """Article handler - Provides an api for working with articles"""
 
     def all_articles(self):
@@ -131,6 +168,7 @@ class ArticleHandler(BlogHandler, JsonRestHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def post(self):
         """POST method for articles - Exposed as `POST /api/article`"""
         try:
@@ -139,12 +177,13 @@ class ArticleHandler(BlogHandler, JsonRestHandler):
             article.url = re.sub(
                         r'[/|!|"|:|;|.|%|^|&|*|(|)|@|,|{|}|+|=|_|?|<|>]',
                         'p', article.tittle).replace(' ', '-').lower()
-            article.short_url = BlogHandler.url_shortner(article.url)
+            article.short_url = 'hii'
             article.put()
             self.send_success(article)
         except Exception as e:
                 self.send_error(404, e)
 
+    @authenticated
     def put(self, **kwargs):
         """
         PUT method for article - Exposed as `PATCH /api/article/<id>/`
@@ -166,6 +205,7 @@ class ArticleHandler(BlogHandler, JsonRestHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def delete(self, **kwargs):
         """
         DELETE method for articles - Exposed as `DELETE /api/article/<id>`
@@ -176,7 +216,7 @@ class ArticleHandler(BlogHandler, JsonRestHandler):
             if article:
                 article.soft_deleted = True
                 article.put()
-                self.send_success({'message': 'sucess'})
+                self.send_success({'status': 'success'})
             else:
                 raise IndexError
         except IndexError as ie:
@@ -185,12 +225,12 @@ class ArticleHandler(BlogHandler, JsonRestHandler):
             self.send_error(500, e)
 
 
-class SubscriberHandler(BlogHandler, JsonRestHandler):
+class SubscriberHandler(BlogApiHandler):
     """
     Handler for subscribers - Exposes GET, POST, PATCH,
     DELETE for `/api/subscriber`
     """
-
+    @authenticated
     def get(self):
         """G
         ET method for subscribers - Exposed as `GET /api/subscribers`
@@ -213,6 +253,7 @@ class SubscriberHandler(BlogHandler, JsonRestHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def delete(self, **kwargs):
         """
         DELETE method for subscribers -
@@ -223,7 +264,7 @@ class SubscriberHandler(BlogHandler, JsonRestHandler):
             subscriber = model.Subscriber.get_by_id(long(id))
             if subscriber:
                 subscriber.soft_deleted = True
-                self.send_success({'message': 'sucess'})
+                self.send_success({'status': 'success'})
             else:
                 raise IndexError
         except IndexError as ie:
@@ -232,7 +273,7 @@ class SubscriberHandler(BlogHandler, JsonRestHandler):
             self.send_error(500, e)
 
 
-class TagHandler(BlogHandler, JsonRestHandler):
+class TagHandler(BlogApiHandler):
     """
     Blog tag handler -
     Exposes api for GET, POST, DELETE
@@ -247,6 +288,7 @@ class TagHandler(BlogHandler, JsonRestHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def post(self):
         """
         POST method for all tags - Exposed as `POST /api/tag`
@@ -259,6 +301,7 @@ class TagHandler(BlogHandler, JsonRestHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def delete(self, **kwargs):
         """
         DELETE method for all tags - Exposed as `DELETE /api/tag/<id>`
@@ -269,16 +312,16 @@ class TagHandler(BlogHandler, JsonRestHandler):
             if tag:
                 tag.soft_deleted = True
                 tag.put()
-                self.send_success({'message': 'sucess'})
+                self.send_success({'status': 'success'})
             else:
                 raise IndexError
-        except IndexError as ie:
+        except IndexError as e:
             self.send_error(404, 'wrong index')
         except Exception as e:
             self.send_error(500, e)
 
 
-class UrlShortnerHandler(BlogHandler, JsonRestHandler):
+class UrlShortnerHandler(BlogApiHandler):
     """
     URL shortner API handler -
     Exposes GET and POST API
@@ -290,28 +333,48 @@ class UrlShortnerHandler(BlogHandler, JsonRestHandler):
         Exposed as `GET /api/short?short_url=<shortUrl>`
         """
         try:
-            query_url = self.request.get('short_url')
-            url = model.ShortUrl \
-                .query(model.ShortUrl.short_url == query_url).get()
-            print query_url
-            self.send_success(url)
+            short_url_string = self.request.get('short_url')
+            long_url_string = self.request.get('long_url')
+            if short_url_string:
+                short_url_id = short_url.saturate(short_url_string)
+                short_url_obj = model.ShortUrl.get_by_id(short_url_id)
+                short_url_obj.short_url = short_url\
+                    .dehydrate(short_url_obj.key.id())
+                self.send_success(short_url_obj)
+            elif long_url_string:
+                short_url_obj = model.ShortUrl \
+                    .query(model.ShortUrl.full_url == long_url).get()
+                short_url_obj.short_url = short_url\
+                    .dehydrate(short_url_obj.key.id())
+                self.send_success(short_url_obj)
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def post(self):
         """
         POST method for url shortner -
         Exposed as `POST /api/short>`
         """
         try:
-            short_url = model.ShortUrl()
-            short_url.from_json(self.request.body)
-            short_url.short_url = BlogHandler.url_shortner(short_url.full_url)
-            short_url.put()
-            self.send_success(short_url)
+            short_url_obj = model.ShortUrl()
+            short_url_obj.from_json(self.request.body)
+            short_url_exists = \
+                model.ShortUrl.query(model.ShortUrl.full_url ==
+                                     short_url_obj.full_url).get()
+            if short_url_exists:
+                short_url_link = short_url.dehydrate(short_url_exists.key.id())
+                short_url_exists.short_url = short_url_link
+                self.send_success(short_url_exists)
+            else:
+                short_url_obj.put()
+                short_url_link = short_url.dehydrate(short_url_obj.key.id())
+                short_url_obj.short_url = short_url_link
+                self.send_success(short_url_obj)
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def delete(self, **kwargs):
         """
         DELETE method for url shortner -
@@ -319,14 +382,44 @@ class UrlShortnerHandler(BlogHandler, JsonRestHandler):
         """
         try:
             id = kwargs['id']
-            short_url = model.ShortUrl.get_by_id(long(id))
-            if short_url:
-                short_url.soft_deleted = True
-                short_url.put()
-                self.send_success({'message': 'sucess'})
+            short_url_obj = model.ShortUrl.get_by_id(long(id))
+            if short_url_obj:
+                short_url_obj.soft_deleted = True
+                short_url_obj.put()
+                self.send_success({'status': 'success'})
             else:
                 raise IndexError
         except IndexError as ie:
             self.send_error(404, 'wrong index')
         except Exception as e:
             self.send_error(500, e)
+
+
+def ConfigHandlar(BlogApiHandler):
+    """
+    Configuration
+     get and update handlar
+    """
+    @authenticated
+    def get(self):
+        """
+        GET method for user config (available for admin) -
+        Exposed as `GET /api/config`
+        """
+        pass
+
+    @authenticated
+    def post(self):
+        """
+        POST method for user config (available for admin) -
+        Exposed as `POST /api/config`
+        """
+        pass
+
+    @authenticated
+    def put(self):
+            """
+            PATCH/PUT method for user config (available for admin) -
+            Exposed as `PATCH /api/config`
+            """
+        pass

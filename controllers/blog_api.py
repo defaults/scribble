@@ -35,9 +35,10 @@ class BlogApiHandler(base_controller.JsonRestHandler):
 
 class LoginApiHandler(BlogApiHandler):
     """login api handler - handles login and logout"""
+
+    @xsrf_protect
     def login(self):
         login_type = self.request.get('login_type')
-        csrf = self.request.get('csrf_nonce')
         try:
             if login_type == 'fb_accountkit':
                 code = self.request.get('code')
@@ -49,17 +50,13 @@ class LoginApiHandler(BlogApiHandler):
                 user = self.user_model.get_by_mobile_no(
                     authenticated_mobile_no)
 
-                self.final_processor(user)
+                self.final_processor(user, 'fb_accountkit',
+                                     authenticated_mobile_no)
 
             elif login_type == 'email':
                 email = self.request.get('email')
-
                 user = self.user_model.get_by_email_address(email)
-
-                if not user and config.admin.email_address == email:
-                    self.user_model.create_user(config.admin)
-                authentication.LoginServicesHandler().initiate_email_login(
-                    email)
+                self.final_processor(user, 'email', email)
 
                 self.send_success({'status': 'success'})
 
@@ -87,10 +84,14 @@ class LoginApiHandler(BlogApiHandler):
         else:
             raise Exception('user creation failed')
 
-    def final_processor(user):
+    def final_processor(user, login_type, authenticated_identifier):
         """finallly checks for valid user and redirects after login.
         :param user:
             user object
+        :param login_type:
+            user login_type
+        :param authenticated_identifier:
+            user identifier by which user is authenticated
         """
         if user:
             if not user.verified:
@@ -100,7 +101,10 @@ class LoginApiHandler(BlogApiHandler):
                 self.auth.store.user_to_dict(user))
             self.redirect_to('dashboard')
 
-        elif config.admin['mobile_no'] == authenticated_mobile_no:
+        elif (login_type == 'fb_accountkit' and
+              config.ADMIN['mobile_no'] == authenticated_identifier) or \
+            (login_type == 'email' and
+             config.ADMIN.mobile == authenticated_identifier):
             self.user_model.create_user(
                 config.admin, verified=True)
             self.redirect_to('first_time_setup')
@@ -164,6 +168,7 @@ class ArticleHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def post(self):
         """POST method for articles - Exposed as `POST /api/article`"""
         try:
@@ -178,6 +183,7 @@ class ArticleHandler(BlogApiHandler):
         except Exception as e:
                 self.send_error(404, e)
 
+    @authenticated
     def put(self, **kwargs):
         """
         PUT method for article - Exposed as `PATCH /api/article/<id>/`
@@ -199,6 +205,7 @@ class ArticleHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def delete(self, **kwargs):
         """
         DELETE method for articles - Exposed as `DELETE /api/article/<id>`
@@ -223,6 +230,7 @@ class SubscriberHandler(BlogApiHandler):
     Handler for subscribers - Exposes GET, POST, PATCH,
     DELETE for `/api/subscriber`
     """
+    @authenticated
     def get(self):
         """G
         ET method for subscribers - Exposed as `GET /api/subscribers`
@@ -245,6 +253,7 @@ class SubscriberHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def delete(self, **kwargs):
         """
         DELETE method for subscribers -
@@ -279,6 +288,7 @@ class TagHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def post(self):
         """
         POST method for all tags - Exposed as `POST /api/tag`
@@ -291,6 +301,7 @@ class TagHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def delete(self, **kwargs):
         """
         DELETE method for all tags - Exposed as `DELETE /api/tag/<id>`
@@ -339,6 +350,7 @@ class UrlShortnerHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def post(self):
         """
         POST method for url shortner -
@@ -362,6 +374,7 @@ class UrlShortnerHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
+    @authenticated
     def delete(self, **kwargs):
         """
         DELETE method for url shortner -
@@ -380,3 +393,33 @@ class UrlShortnerHandler(BlogApiHandler):
             self.send_error(404, 'wrong index')
         except Exception as e:
             self.send_error(500, e)
+
+
+def ConfigHandlar(BlogApiHandler):
+    """
+    Configuration
+     get and update handlar
+    """
+    @authenticated
+    def get(self):
+        """
+        GET method for user config (available for admin) -
+        Exposed as `GET /api/config`
+        """
+        pass
+
+    @authenticated
+    def post(self):
+        """
+        POST method for user config (available for admin) -
+        Exposed as `POST /api/config`
+        """
+        pass
+
+    @authenticated
+    def put(self):
+            """
+            PATCH/PUT method for user config (available for admin) -
+            Exposed as `PATCH /api/config`
+            """
+        pass

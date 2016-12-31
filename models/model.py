@@ -141,6 +141,7 @@ class User(webapp2_extras.appengine.auth.models.User):
     email_address = ndb.StringProperty(indexed=True)
     mobile_no = ndb.StringProperty(indexed=True)
     is_admin = ndb.BooleanProperty(indexed=True, default=False)
+    timezone = ndb.StringProperty(default='UTC')
 
     @classmethod
     def create_user(cls, user_data, verified=False):
@@ -240,8 +241,6 @@ class AuthConfig(db.Model, Jsonifiable):
 class Config(ndb.Model):
     csrf_secret_key = ndb.StringProperty(
         indexed=True, default=uuid.uuid4().hex())
-    session_secret_key = ndb.StringProperty(
-        indexed=True, default=uuid.uuid4().hex())
 
     @staticmethod
     def get_csrf_secret_key():
@@ -255,28 +254,6 @@ class Config(ndb.Model):
         secret = memcache.get('xsrf_secret')
         if not secret:
             xsrf_secret = Config.all().get()
-            if not xsrf_secret:
-                secret = binascii.b2a_hex(os.urandom(16))
-                xsrf_secret = XsrfSecret(secret=secret)
-                xsrf_secret.put()
-
-                secret = xsrf_secret.secret
-                memcache.set('xsrf_secret', secret)
-
-        return secret
-
-    @staticmethod
-    def get_session_secret_key():
-        """Retrieves the session secret.
-
-        Tries to retrieve the session secret from memcache, and if that fails,
-        falls back to getting it out of datastore. Note that the secret
-        should not be changed, as that would result in all issued
-        tokens becoming invalid.
-        """
-        secret = memcache.get('session_secret')
-        if not secret:
-            xsrf_secret = XsrfSecret.all().get()
             if not xsrf_secret:
                 secret = binascii.b2a_hex(os.urandom(16))
                 xsrf_secret = XsrfSecret(secret=secret)

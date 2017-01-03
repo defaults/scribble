@@ -418,8 +418,8 @@ def ConfigHandlar(BlogApiHandler):
 
     @authenticated
     def put(self):
-            """
-            PATCH/PUT method for user config (available for admin) -
-            Exposed as `PATCH /api/config`
-            """
+        """
+        PATCH/PUT method for user config (available for admin) -
+        Exposed as `PATCH /api/config`
+        """
         pass

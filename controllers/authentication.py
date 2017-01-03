@@ -19,6 +19,7 @@ from google.appengine.ext import db
 from webapp2_extras.auth import InvalidAuthIdError
 
 from config import config
+from controllers import base_controller
 
 
 def authenticated(handler):
@@ -39,18 +40,19 @@ def authenticated(handler):
 class CSRFHandlar(base_controller.BaseHandler):
     """docstring for CSRFHandlar."""
 
-    # String used instead of user id when there is no user.
-    # Not that it makes sense to protect unauthenticated
-    # functionality from XSRF.
-    ANONYMOUS_USER = 'anonymous'
+    def __init__(self):
+        # String used instead of user id when there is no user.
+        # Not that it makes sense to protect unauthenticated
+        # functionality from XSRF.
+        self.ANONYMOUS_USER = 'anonymous'
 
-    # Delimiter character
-    DELIMITER = ':'
+        # self.DELIMITER character
+        self.DELIMITER = ':'
 
-    # 24 hours in seconds
-    DEFAULT_TIMEOUT_SECS = 1*60*60*24
+        # 24 hours in seconds
+        self.DEFAULT_TIMEOUT_SECS = 1*60*60*24
 
-    def generate_token(key, user_id, path="", when=None):
+    def generate_token(self, key, user_id, path="", when=None):
         """Generates a URL-safe token for the given user, action, time tuple.
         Args:
         key: secret key to use.
@@ -64,19 +66,19 @@ class CSRFHandlar(base_controller.BaseHandler):
         when = when or int(time.time())
         digester = hmac.new(str(key))
         digester.update(str(user_id))
-        digester.update(DELIMITER)
+        digester.update(self.DELIMITER)
         digester.update(str(path))
-        digester.update(DELIMITER)
+        digester.update(self.DELIMITER)
         digester.update(str(when))
         digest = digester.digest()
 
         token = base64.urlsafe_b64encode('%s%s%d' % (digest,
-                                                     DELIMITER,
+                                                     self.DELIMITER,
                                                      when))
         return token
 
-    def validate_token(key, token, user_id, path="", current_time=None,
-                       timeout=DEFAULT_TIMEOUT_SECS):
+    def validate_token(self, key, token, user_id, path="", current_time=None,
+                       timeout=-1):
         """Validates that the given token authorizes the user for the action.
         Tokens are invalid if the time of issue is too old or if the token
         does not match what generateToken outputs (i.e. the token was forged).
@@ -94,9 +96,11 @@ class CSRFHandlar(base_controller.BaseHandler):
         """
         if not token:
             return False
+        if not timeout:
+            timeout = self.DEFAULT_TIMEOUT_SECS
         try:
             decoded = base64.urlsafe_b64decode(str(token))
-            token_time = long(decoded.split(DELIMITER)[-1])
+            token_time = long(decoded.split(self.DELIMITER)[-1])
         except (TypeError, ValueError):
             return False
         if current_time is None:
@@ -110,6 +114,7 @@ class CSRFHandlar(base_controller.BaseHandler):
             key, user_id, path=path, when=token_time)
         return const_time_compare(expected_token, token)
 
+    @staticmethod
     def const_time_compare(a, b):
         """Compares the the given strings in constant time."""
         if len(a) != len(b):
@@ -131,24 +136,25 @@ class CSRFHandlar(base_controller.BaseHandler):
         """
         def decorate(self, *args, **kwargs):
             path = os.environ.get('PATH_INFO', '/')
+            print path
             token = self.request.get('xsrf', None)
             if not token:
                 self.error(403)
                 return
 
-            user = ANONYMOUS_USER
+            user = self.ANONYMOUS_USER
             if users.get_current_user():
                 user = users.get_current_user().user_id()
-            if not validate_token(config.CONFIG.CSRF_SECRET_KEY,
+            if not validate_token(config.CSRF_SECRET_KEY,
                                   token, user, path):
                 self.error(403)
                 return
 
-        return func(self, *args, **kwargs)
+            return func(self, *args, **kwargs)
 
-    return decorate
+        return decorate
 
-    def xsrf_token(path=None):
+    def xsrf_token(self, path=None):
         """Generates an XSRF token for the given path.
         This function is mostly supposed to be used as a filter for a
         templating system, so that tokens can be conveniently generated
@@ -159,10 +165,11 @@ class CSRFHandlar(base_controller.BaseHandler):
         """
         if not path:
             path = os.environ.get('PATH_INFO')
-            user = ANONYMOUS_USER
+            user = self.ANONYMOUS_USER
         if users.get_current_user():
             user = users.get_current_user().user_id()
-        return generate_token(config.CONFIG.CSRF_SECRET_KEY, user, path)
+
+        return self.generate_token(config.CSRF_SECRET_KEY, user, path)
 
 
 class LoginServicesHandler(CSRFHandlar):
@@ -231,7 +238,7 @@ class LoginServicesHandler(CSRFHandlar):
         return
 
     def verify_user(self, user_id, signup_token, type):
-        “"""varifies user based on request type and email.
+        """varifies user based on request type and email.
             currently used for email login verification
 
         :params user_id:
@@ -242,7 +249,7 @@ class LoginServicesHandler(CSRFHandlar):
             verification type
         :returns:
             user if verified
-        """”
+        """
         user, ts = self.user_model.get_by_auth_token(
             int(user_id), signup_token, 'signup')
 

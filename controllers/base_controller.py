@@ -21,7 +21,6 @@ from webapp2_extras import sessions
 
 from helpers import markdown
 from helpers import short_url
-from controllers import authentication
 from models import model
 from config import config
 

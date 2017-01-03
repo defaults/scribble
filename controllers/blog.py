@@ -45,8 +45,8 @@ class LoginHandler(BlogHandler):
         auth = self.auth
         if not auth.get_user_by_session():
             params = {
-                'page': 'login'
-
+                'page': 'login',
+                'xsrf': authentication.CSRFHandlar().xsrf_token()
             }
             self.render_response('login.html', **params)
         else:

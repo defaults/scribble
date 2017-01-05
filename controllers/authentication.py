@@ -46,7 +46,7 @@ class CSRFHandlar(base_controller.BaseHandler):
         # functionality from XSRF.
         self.ANONYMOUS_USER = 'anonymous'
 
-        # self.DELIMITER character
+        # DELIMITER character
         self.DELIMITER = ':'
 
         # 24 hours in seconds
@@ -136,7 +136,6 @@ class CSRFHandlar(base_controller.BaseHandler):
         """
         def decorate(self, *args, **kwargs):
             path = os.environ.get('PATH_INFO', '/')
-            print path
             token = self.request.get('xsrf', None)
             if not token:
                 self.error(403)

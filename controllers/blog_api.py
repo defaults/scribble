@@ -35,8 +35,9 @@ class BlogApiHandler(base_controller.JsonRestHandler):
 
 class LoginApiHandler(BlogApiHandler):
     """login api handler - handles login and logout"""
+    login_services_handlar = authentication.LoginServicesHandler()
 
-    @xsrf_protect
+    @login_services_handlar.xsrf_protect
     def login(self):
         login_type = self.request.get('login_type')
         try:
@@ -44,7 +45,7 @@ class LoginApiHandler(BlogApiHandler):
                 code = self.request.get('code')
 
                 authenticated_mobile_no = \
-                    authentication.LoginServicesHandler().accountkit_login(
+                    login_services_handlar.accountkit_login(
                         code, csrf)
 
                 user = self.user_model.get_by_mobile_no(
@@ -91,7 +92,7 @@ class LoginApiHandler(BlogApiHandler):
         :param login_type:
             user login_type
         :param authenticated_identifier:
-            user identifier by which user is authenticated
+            user identifier by which user is authentication.authenticated
         """
         if user:
             if not user.verified:
@@ -168,7 +169,7 @@ class ArticleHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def post(self):
         """POST method for articles - Exposed as `POST /api/article`"""
         try:
@@ -183,7 +184,7 @@ class ArticleHandler(BlogApiHandler):
         except Exception as e:
                 self.send_error(404, e)
 
-    @authenticated
+    @authentication.authenticated
     def put(self, **kwargs):
         """
         PUT method for article - Exposed as `PATCH /api/article/<id>/`
@@ -205,7 +206,7 @@ class ArticleHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def delete(self, **kwargs):
         """
         DELETE method for articles - Exposed as `DELETE /api/article/<id>`
@@ -230,7 +231,7 @@ class SubscriberHandler(BlogApiHandler):
     Handler for subscribers - Exposes GET, POST, PATCH,
     DELETE for `/api/subscriber`
     """
-    @authenticated
+    @authentication.authenticated
     def get(self):
         """G
         ET method for subscribers - Exposed as `GET /api/subscribers`
@@ -253,7 +254,7 @@ class SubscriberHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def delete(self, **kwargs):
         """
         DELETE method for subscribers -
@@ -288,7 +289,7 @@ class TagHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def post(self):
         """
         POST method for all tags - Exposed as `POST /api/tag`
@@ -301,7 +302,7 @@ class TagHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def delete(self, **kwargs):
         """
         DELETE method for all tags - Exposed as `DELETE /api/tag/<id>`
@@ -350,7 +351,7 @@ class UrlShortnerHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def post(self):
         """
         POST method for url shortner -
@@ -374,7 +375,7 @@ class UrlShortnerHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def delete(self, **kwargs):
         """
         DELETE method for url shortner -
@@ -400,7 +401,7 @@ def ConfigHandlar(BlogApiHandler):
     Configuration
      get and update handlar
     """
-    @authenticated
+    @authentication.authenticated
     def get(self):
         """
         GET method for user config (available for admin) -
@@ -408,7 +409,7 @@ def ConfigHandlar(BlogApiHandler):
         """
         pass
 
-    @authenticated
+    @authentication.authenticated
     def post(self):
         """
         POST method for user config (available for admin) -
@@ -416,7 +417,7 @@ def ConfigHandlar(BlogApiHandler):
         """
         pass
 
-    @authenticated
+    @authentication.authenticated
     def put(self):
         """
         PATCH/PUT method for user config (available for admin) -

@@ -126,7 +126,7 @@ class CSRFHandlar(base_controller.BaseHandler):
 
         return equals == 0
 
-    def xsrf_protect(func):
+    def xsrf_protect(self, func):
         """Decorator to protect webapp2's get and post functions from XSRF.
         Decorating a function with @xsrf_protect will verify that a valid
         XSRF token has been submitted through the xsrf parameter.
@@ -134,6 +134,8 @@ class CSRFHandlar(base_controller.BaseHandler):
         If no token or an invalid token is received,
         the decorated function is not called and a 403 error will be issued.
         """
+        this = self
+
         def decorate(self, *args, **kwargs):
             path = os.environ.get('PATH_INFO', '/')
             token = self.request.get('xsrf', None)
@@ -141,11 +143,11 @@ class CSRFHandlar(base_controller.BaseHandler):
                 self.error(403)
                 return
 
-            user = self.ANONYMOUS_USER
+            user = this.ANONYMOUS_USER
             if users.get_current_user():
                 user = users.get_current_user().user_id()
-            if not validate_token(config.CSRF_SECRET_KEY,
-                                  token, user, path):
+            if not this.validate_token(config.CSRF_SECRET_KEY,
+                                       token, user, path):
                 self.error(403)
                 return
 
@@ -162,9 +164,9 @@ class CSRFHandlar(base_controller.BaseHandler):
         path: The path the token should be valid for. By default,
         the path of the current request.
         """
+        user = self.ANONYMOUS_USER
         if not path:
             path = os.environ.get('PATH_INFO')
-            user = self.ANONYMOUS_USER
         if users.get_current_user():
             user = users.get_current_user().user_id()
 

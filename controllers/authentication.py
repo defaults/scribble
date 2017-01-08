@@ -37,6 +37,36 @@ def authenticated(handler):
         return check_authentication
 
 
+def xsrf_protect(func):
+    """Decorator to protect webapp2's get and post functions from XSRF.
+    Decorating a function with @xsrf_protect will verify that a valid
+    XSRF token has been submitted through the xsrf parameter.
+    Both GET and POST parameters are accepted.
+    If no token or an invalid token is received,
+    the decorated function is not called and a 403 error will be issued.
+    """
+
+    def decorate(self, *args, **kwargs):
+        csrf_handlar = CSRFHandlar()
+        path = os.environ.get('PATH_INFO', '/')
+        token = self.request.get('xsrf', None)
+        if not token:
+            self.error(403)
+            return
+
+        user = csrf_handlar.ANONYMOUS_USER
+        if self.auth.get_user_by_session():
+            user = self.auth.get_user_by_session().get_id()
+        if not csrf_handlar.validate_token(config.CSRF_SECRET_KEY,
+                                           token, user, path):
+            self.error(403)
+            return
+
+        return func(self, *args, **kwargs)
+
+    return decorate
+
+
 class CSRFHandlar(base_controller.BaseHandler):
     """docstring for CSRFHandlar."""
 
@@ -75,10 +105,11 @@ class CSRFHandlar(base_controller.BaseHandler):
         token = base64.urlsafe_b64encode('%s%s%d' % (digest,
                                                      self.DELIMITER,
                                                      when))
+
         return token
 
     def validate_token(self, key, token, user_id, path="", current_time=None,
-                       timeout=-1):
+                       timeout=0):
         """Validates that the given token authorizes the user for the action.
         Tokens are invalid if the time of issue is too old or if the token
         does not match what generateToken outputs (i.e. the token was forged).
@@ -110,9 +141,10 @@ class CSRFHandlar(base_controller.BaseHandler):
             return False
 
         # The given token should match the generated one with the same time.
-        expected_token = generate_token(
+        expected_token = self.generate_token(
             key, user_id, path=path, when=token_time)
-        return const_time_compare(expected_token, token)
+
+        return self.const_time_compare(expected_token, token)
 
     @staticmethod
     def const_time_compare(a, b):
@@ -126,35 +158,6 @@ class CSRFHandlar(base_controller.BaseHandler):
 
         return equals == 0
 
-    def xsrf_protect(self, func):
-        """Decorator to protect webapp2's get and post functions from XSRF.
-        Decorating a function with @xsrf_protect will verify that a valid
-        XSRF token has been submitted through the xsrf parameter.
-        Both GET and POST parameters are accepted.
-        If no token or an invalid token is received,
-        the decorated function is not called and a 403 error will be issued.
-        """
-        this = self
-
-        def decorate(self, *args, **kwargs):
-            path = os.environ.get('PATH_INFO', '/')
-            token = self.request.get('xsrf', None)
-            if not token:
-                self.error(403)
-                return
-
-            user = this.ANONYMOUS_USER
-            if users.get_current_user():
-                user = users.get_current_user().user_id()
-            if not this.validate_token(config.CSRF_SECRET_KEY,
-                                       token, user, path):
-                self.error(403)
-                return
-
-            return func(self, *args, **kwargs)
-
-        return decorate
-
     def xsrf_token(self, path=None):
         """Generates an XSRF token for the given path.
         This function is mostly supposed to be used as a filter for a
@@ -167,8 +170,8 @@ class CSRFHandlar(base_controller.BaseHandler):
         user = self.ANONYMOUS_USER
         if not path:
             path = os.environ.get('PATH_INFO')
-        if users.get_current_user():
-            user = users.get_current_user().user_id()
+        if self.auth.get_user_by_session():
+            user = self.auth.get_user_by_session().get_id()
 
         return self.generate_token(config.CSRF_SECRET_KEY, user, path)
 
@@ -176,13 +179,11 @@ class CSRFHandlar(base_controller.BaseHandler):
 class LoginServicesHandler(CSRFHandlar):
     """login handlar - handler all types of login."""
 
-    def accountkit_login(self, code, csrf):
+    def accountkit_login(self, code):
         """Initialtes fb accountkit mobile no based login
 
         :params code:
             code to verify login request
-        :params csrf:
-            csrf nonce
         :returns:
             logged in mobile_no
         """

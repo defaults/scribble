@@ -35,9 +35,10 @@ class BlogApiHandler(base_controller.JsonRestHandler):
 
 class LoginApiHandler(BlogApiHandler):
     """login api handler - handles login and logout"""
-    login_services_handlar = authentication.LoginServicesHandler()
+    # def __init__(self):
+    #     self.login_services_handlar = authentication.LoginServicesHandler()
 
-    @login_services_handlar.xsrf_protect
+    @authentication.xsrf_protect
     def login(self):
         login_type = self.request.get('login_type')
         try:
@@ -45,7 +46,7 @@ class LoginApiHandler(BlogApiHandler):
                 code = self.request.get('code')
 
                 authenticated_mobile_no = \
-                    login_services_handlar.accountkit_login(
+                    authentication.LoginServicesHandler().accountkit_login(
                         code, csrf)
 
                 user = self.user_model.get_by_mobile_no(

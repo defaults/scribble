@@ -35,19 +35,18 @@ class BlogApiHandler(base_controller.JsonRestHandler):
 
 class LoginApiHandler(BlogApiHandler):
     """login api handler - handles login and logout"""
-    # def __init__(self):
-    #     self.login_services_handlar = authentication.LoginServicesHandler()
 
     @authentication.xsrf_protect
     def login(self):
         login_type = self.request.get('login_type')
+        login_services_handlar = authentication.LoginServicesHandler()
         try:
             if login_type == 'fb_accountkit':
                 code = self.request.get('code')
 
                 authenticated_mobile_no = \
-                    authentication.LoginServicesHandler().accountkit_login(
-                        code, csrf)
+                    login_services_handlar.accountkit_login(
+                        code)
 
                 user = self.user_model.get_by_mobile_no(
                     authenticated_mobile_no)
@@ -71,6 +70,9 @@ class LoginApiHandler(BlogApiHandler):
     def logout(self):
         self.auth.unset_session()
         self.redirect_to('home')
+
+    def signup(self):
+        pass
 
     def create_user(self, username, name, email, mobile_no, verified=False):
         status, created_user = self.user_model.create_user(

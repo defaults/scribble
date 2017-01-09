@@ -239,26 +239,26 @@ class LoginServicesHandler(CSRFHandlar):
 
         return
 
-    def verify_user(self, user_id, signup_token, type):
+    def verify_user(self, user_id, authentication_token, authentication_type):
         """varifies user based on request type and email.
             currently used for email login verification
 
         :params user_id:
             user Id of user
-        :params signup_token:
+        :params authentication_token:
             signup token
-        :params type:
+        :params authentication_type:
             verification type
         :returns:
             user if verified
         """
         user, ts = self.user_model.get_by_auth_token(
-            int(user_id), signup_token, 'signup')
+            int(user_id), authentication_token, authentication_type)
 
         if not user:
             logging.info(
                 'Could not find any user with id "%s" signup token "%s"',
-                user_id, signup_token)
+                user_id, authentication_token)
             raise Exception('error', 'Could not find any user')
 
         # store user data in the session
@@ -266,7 +266,8 @@ class LoginServicesHandler(CSRFHandlar):
             self.auth.store.user_to_dict(user), remember=True)
 
         if type == 'signup':
-            self.user_model.delete_signup_token(user.get_id(), signup_token)
+            self.user_model.delete_authentication_token(
+                user.get_id(), signup_token)
 
         if not user.verified:
             user.verified = True

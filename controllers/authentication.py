@@ -37,7 +37,7 @@ def authenticated(handler):
         return check_authentication
 
 
-def xsrf_protect(func):
+def xsrf_protect(handlar):
     """Decorator to protect webapp2's get and post functions from XSRF.
     Decorating a function with @xsrf_protect will verify that a valid
     XSRF token has been submitted through the xsrf parameter.
@@ -62,9 +62,24 @@ def xsrf_protect(func):
             self.error(403)
             return
 
-        return func(self, *args, **kwargs)
+        return handlar(self, *args, **kwargs)
 
     return decorate
+
+
+def admin(handlar):
+    """
+    """
+
+    def decorate(self, *args, *kwargs):
+        auth = self.auth
+        user = auth.get_user_by_session()
+
+        if not user.is_admin:
+            self.error(403)
+            return
+
+        return handlar(self, *args, **kwargs)
 
 
 class CSRFHandlar(base_controller.BaseHandler):
@@ -239,12 +254,10 @@ class LoginServicesHandler(CSRFHandlar):
 
         return
 
-    def verify_user(self, user_id, authentication_token, authentication_type):
+    def verify_auth(self, authentication_token, authentication_type):
         """varifies user based on request type and email.
             currently used for email login verification
 
-        :params user_id:
-            user Id of user
         :params authentication_token:
             signup token
         :params authentication_type:

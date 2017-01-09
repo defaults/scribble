@@ -71,22 +71,19 @@ class LoginApiHandler(BlogApiHandler):
         self.auth.unset_session()
         self.redirect_to('home')
 
-    def signup(self):
-        pass
+    def verify(self, *args, **kwargs):
+        authentication_token = kwargs['authentication_token']
+        authentication_type = kwargs['authentication_type']
 
-    def create_user(self, username, name, email, mobile_no, verified=False):
-        status, created_user = self.user_model.create_user(
-                                        username,
-                                        ['email_address', 'mobile_no'],
-                                        name=name,
-                                        email_address=email,
-                                        mobile_no=mobile_no,
-                                        verified=varified)
-
-        if status:
-            return created_user
-        else:
-            raise Exception('user creation failed')
+        try:
+            $user = authentication.LoginServicesHandler().verify_auth(
+                authentication_token,
+                authentication_type
+            )
+            if user and authentication_type == 'signup' and user.is_admin:
+                self.redirect_to('first_time_setup')
+            else:
+                self.redirect_to('dashboard')
 
     def final_processor(user, login_type, authenticated_identifier):
         """finallly checks for valid user and redirects after login.
@@ -405,6 +402,7 @@ def ConfigHandlar(BlogApiHandler):
      get and update handlar
     """
     @authentication.authenticated
+    @authentication.admin
     def get(self):
         """
         GET method for user config (available for admin) -
@@ -413,6 +411,7 @@ def ConfigHandlar(BlogApiHandler):
         pass
 
     @authentication.authenticated
+    @authentication.admin
     def post(self):
         """
         POST method for user config (available for admin) -
@@ -421,6 +420,7 @@ def ConfigHandlar(BlogApiHandler):
         pass
 
     @authentication.authenticated
+    @authentication.admin
     def put(self):
         """
         PATCH/PUT method for user config (available for admin) -

@@ -66,4 +66,9 @@ app = webapp2.WSGIApplication([
             handler=blog_api.LoginApiHandler,
             name='logout_api',
             handler_method='logout', methods=['GET'], strict_slash=True),
+        routes.RedirectRoute(
+            '/api/config',
+            handler=blog_api.ConfigHandlar,
+            name='config_api', methods=['GET', 'POST', 'PUT', 'PATCH'],
+            strict_slash=True),
     ], config=config.APPLICATION_CONFIG, debug=True)

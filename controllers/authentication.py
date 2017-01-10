@@ -23,9 +23,8 @@ from controllers import base_controller
 
 
 def authenticated(handler):
-    """
-        Decorator that checks if there's a user associated with the
-        current session. Will fail if there's no session present.
+    """Decorator that checks if there's a user associated with the
+    current session. Will fail if there's no session present.
     """
     def check_authentication(self, *args, **kwargs):
         auth = self.auth
@@ -51,7 +50,7 @@ def xsrf_protect(handlar):
         path = os.environ.get('PATH_INFO', '/')
         token = self.request.get('xsrf', None)
         if not token:
-            self.error(403)
+            self.error(403, 'Not authorised, bad request.')
             return
 
         user = csrf_handlar.ANONYMOUS_USER
@@ -59,7 +58,7 @@ def xsrf_protect(handlar):
             user = self.auth.get_user_by_session().get_id()
         if not csrf_handlar.validate_token(config.CSRF_SECRET_KEY,
                                            token, user, path):
-            self.error(403)
+            self.error(403, 'Not authorised, invalid request.')
             return
 
         return handlar(self, *args, **kwargs)
@@ -68,15 +67,14 @@ def xsrf_protect(handlar):
 
 
 def admin(handlar):
-    """
-    """
+    """Decorator to check if logged in user is admin. Returns 403 if not."""
 
     def decorate(self, *args, *kwargs):
         auth = self.auth
         user = auth.get_user_by_session()
 
         if not user.is_admin:
-            self.error(403)
+            self.error(403, 'Not authorised, user is not a admin.')
             return
 
         return handlar(self, *args, **kwargs)
@@ -278,9 +276,8 @@ class LoginServicesHandler(CSRFHandlar):
         self.auth.set_session(
             self.auth.store.user_to_dict(user), remember=True)
 
-        if type == 'signup':
-            self.user_model.delete_authentication_token(
-                user.get_id(), signup_token)
+        self.user_model.delete_authentication_token(
+            user.get_id(), authentication_token)
 
         if not user.verified:
             user.verified = True

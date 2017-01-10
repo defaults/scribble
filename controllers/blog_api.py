@@ -62,7 +62,7 @@ class LoginApiHandler(BlogApiHandler):
                 self.send_success({'status': 'success'})
 
             else:
-                self.send_error(401, 'login type not supported')
+                self.send_error(401, 'Invalid Login.')
 
         except Exception as e:
             self.send_error(500, e)
@@ -165,7 +165,7 @@ class ArticleHandler(BlogApiHandler):
             else:
                 raise TypeError
         except TypeError as te:
-            self.send_error(404, 'Resource not found')
+            self.send_error(404, 'Resource not found.')
         except Exception as e:
             self.send_error(500, e)
 

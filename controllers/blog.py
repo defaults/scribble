@@ -21,26 +21,18 @@ from controllers import base_controller
 # base handler
 class BlogHandler(base_controller.BaseHandler):
 
-    # function to resend blog mail
-    def resendMail(self):
-        verify = model.Auth.query().get()
+    def get(self):
+        # code to search the database for blog posts
+        article = model.Article.query().order(-model.Article.date)
 
-        if not verify:
-            verify = ''.join(random.choice(string.ascii_uppercase +
-                                           string.digits) for _ in range(20))
-            save = model.Auth(token=verify)
-            save.put()
-
-        to = config.admin['admin_name'] + ' ' + '<' + \
-            config.admin['admin_mail'] + '>'
-        subject = 'Link to write blog'
-        body = 'https://blog.vikashkumar.me/write/{0}'.format(verify.token)
-
-        self.sendEmail(to, subject, body)
-        self.response.out.write(json.dumps({'status': 'success'}))
+        params = {
+            'page': 'blog',
+            'article': article
+        }
+        self.render_response('blog.html', **params)
 
 
-class LoginHandler(BlogHandler):
+class LoginHandler(base_controller.BaseHandler):
     def login(self):
         auth = self.auth
         if not auth.get_user_by_session():
@@ -57,21 +49,8 @@ class LoginHandler(BlogHandler):
         self.redirect('login')
 
 
-# handler for blog
-class ArticlesListHandler(BlogHandler):
-    def get(self):
-        # code to search the database for blog posts
-        article = model.Article.query().order(-model.Article.date)
-
-        params = {
-            'page': 'blog',
-            'article': article
-        }
-        self.render_response('blog.html', **params)
-
-
 # handler for serving article
-class ArticleHandler(BlogHandler):
+class ArticleHandler(base_controller.BaseHandler):
     def get(self, **kwargs):
         article_url = kwargs['article_url']
         article_content = model.Article.query(
@@ -99,8 +78,9 @@ class ArticleHandler(BlogHandler):
 
 
 # handler for writing blog
-class WriteHandler(BlogHandler):
+class WriteHandler(base_controller.BaseHandler):
     # add function to authenticate user
+
     def get(self, **kwargs):
         auth = kwargs['token']
         verify = model.Auth.query(model.Auth.token == auth).get()
@@ -118,36 +98,20 @@ class WriteHandler(BlogHandler):
             self.redirect('/write')
             return
 
-    # first check authentication
-    def post(self, **kwargs):
-        auth = kwargs['token']
-        verify = model.Auth.query(model.Auth.token == auth).get()
-        if verify:
-            header = self.request.get('header')
-            content = self.request.get('text')
-            url = re.sub(r'[/|!|"|:|;|.|%|^|&|*|(|)|@|,|{|}|+|=|_|?|<|>]',
-                         'p', header).replace(' ', '-').lower()
-            time = datetime.datetime(2015, 03, 02, hour=01, minute=25,
-                                     second=55, microsecond=66)
-            save = model.Article(tittle=header,
-                                 content=content,
-                                 url=url,
-                                 date=time)
-            save.put()
-            token = model.Auth.query().get()
-            token.key.delete()
 
-        else:
-            self.abort(404)
-            return
+class DashboardHandler(base_controller.BaseHandler):
 
-
-class DashboardHandler(BlogHandler):
     def get(self):
         pass
 
 
-class ShortUrlHandler(BlogHandler):
+class ShortUrlHandler(base_controller.BaseHandler):
     """short url handler implementation"""
+
+    def get(self):
+        pass
+
+class AccountHandlar(base_controller.BaseHandler):
+
     def get(self):
         pass

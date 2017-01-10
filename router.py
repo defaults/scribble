@@ -19,36 +19,33 @@ def error(request, response, exception):
 
 app = webapp2.WSGIApplication([
         routes.RedirectRoute(
-            '/login',
+            '/login/',
             handler=blog.LoginHandler,
             name='login',
             handler_method='login', strict_slash=True),
         routes.RedirectRoute(
-            '/logout',
+            '/logout/',
             handler=blog.LoginHandler,
             name='logout',
             handler_method='logout', strict_slash=True),
         routes.RedirectRoute(
-            '/auth/<token>/',
-            handler=blog.WriteHandler, name='write', strict_slash=True),
-        routes.RedirectRoute(
             '/<article_url>/',
             handler=blog.ArticleHandler, name='article', strict_slash=True),
-        routes.RedirectRoute(
-            '/write/resend_mail',
-            handler=blog.BlogHandler, name='resend_mail',
-            handler_method='resend_mail', strict_slash=True),
         routes.RedirectRoute(
             '/dashboard/',
             handler=blog.DashboardHandler, name='dashboard',
             strict_slash=True),
         routes.RedirectRoute(
-            '/short/<short_url>',
+            '/account/',
+            handler=blog.AccountHandler, name='account',
+            strict_slash=True),
+        routes.RedirectRoute(
+            '/short/<short_url>/',
             handler=blog.ShortUrlHandler, name='short_url',
             strict_slash=True),
         routes.RedirectRoute(
             '/',
-            handler=blog.ArticlesListHandler, name='blog',
+            handler=blog.BlogHandler, name='blog',
             strict_slash=True),
 ], config=config.APPLICATION_CONFIG, debug=True)
 

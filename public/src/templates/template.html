@@ -13,92 +13,131 @@
         <meta name="theme-color" content="#ffffff">
 
         {% block seo %}
-        <meta name="google-site-verification" content="SDpxvVVmU0iOOw8NsbJHEoidHQAU9L1pzvIG8XUgM6" />
+            <meta name="google-site-verification" content="{{ meta.google_site_verification_token }}" />
 
-        <meta itemprop="name" content="Welcome - Vikash Kumar">
-        <meta name="description" content="Personal homepage and blog of Vikash Kumar. @CoderVikash. Currently developer @Practo"/>
-        <meta itemprop="image" content="https://vikash.me/images/vikash_seo.png">
+            <meta itemprop="name" content="{{ meta.name }} | Scribble">
+            <meta name="description" content="Personal blog of {{ meta.name }} | Admin panel"/>
+            <meta itemprop="image" content="https://{{ meta.domain }}/images/icon_seo.png">
 
-        <!-- Facebook tag -->
-        <meta property="og:title" content="Home - Vikash Kumar" />
-        <meta property="og:url" content="https://vikash.me/" />
-        <meta property="og:type" content="website" />
-        <meta property="og:description" content="Personal homepage and blog of Vikash Kumar. @CoderVikash. Currently developer @Practo"/>
-        <meta property="og:image" content="https://vikash.me/images/vikash_seo.png" />
-        <meta property="og:site_name" content="Homepage">
-        <meta property="fb:admins" content="1456060372" />
+            <!-- Facebook tag -->
+            <meta property="og:title" content="Home - Scribble" />
+            <meta property="og:url" content="https://{{ meta.domain }}/" />
+            <meta property="og:type" content="website" />
+            <meta property="og:description" content="Personal blog of {{ meta.name }} | Admin panel"/>
+            <meta property="og:image" content="https://{{meta.domain }}/images/icon_seo.png" />
+            <meta property="og:site_name" content="Admin panel">
+            <meta property="fb:admins" content="{{ meta.fb_tag_key  }}" />
 
-        <!-- twitter tag -->
-        <meta name="twitter:card" content="summary" />
-        <meta name="twitter:title" content="Home - Vikash Kumar" />
-        <meta name="twitter:description" content="Personal homepage and blog of Vikash Kumar. @CoderVikash. Currently developer @Practo"/>
-        <meta name="twitter:url" content="https://vikash.me/"/>
-        <meta name="twitter:image" content="https://vikash.me/images/vikash_seo.png"/>
-        <meta name="twitter:creator" content="@CoderVikash">
-        <meta name="twitter:author" content="@CoderVikash">
+            <!-- twitter tag -->
+            <meta name="twitter:card" content="summary" />
+            <meta name="twitter:title" content="{{ meta.name }} | Scribble" />
+            <meta name="twitter:description" content="Personal blog of {{ meta.name }} | Admin panel"/>
+            <meta name="twitter:url" content="https://{{ meta.domain }}/" />
+            <meta name="twitter:image" content="https://{{ meta.domain }}/images/icon_seo.png"/>
+            <meta name="twitter:creator" content="{{ meta.twitter_handlar }}">
+            <meta name="twitter:author" content="{{ meta.twitter_handlar }}">
         {% endblock %}
 
         <title>
-            {% block tittle %}Vikash Kumar{% endblock %}
+            {% block tittle %}Scribble | Admin panel{% endblock %}
         </title>
 
         {% block extra %}
         {% endblock %}
 
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
         <style>
+
             {% block stylesheet %}
             {% endblock %}
+        
         </style>
     </head>
     <body>
 
-    <nav class="navigation">
-        {% block nav %}
-        <div class="nav_heading"><a href="http://vikash.me">Vikash Kumar</a></div>
-        <div class="nav_navigation">
-                <span class="nav_naviagation_list home_link"><a href="http://vikash.me">Home</a></span>
-                <span class="nav_naviagation_list blog_link"><a href="http://blog.vikash.me">Blog</a></span>
-                <span class="nav_naviagation_list projects_link"><a href="https://github.com/codervikash?tab=repositories" target="_blank">Projects</a></span>
-                <span class="nav_naviagation_list about_link"><a href="http://vikash.me/about">About</a></span>
-                <!-- <span class="nav_naviagation_list contact_link"><a href="/contact">Contact</a></span> -->
+        <nav class="navbar is-transparent" role="navigation" aria-label="main navigation">
+            <div class="container">
+                <div class="navbar-brand is-size-2">
+                    <a class="navbar-item" href="/">Scribble</a>
+                </div>
+                <div class="navbar-menu">
+                    <div class="navbar-end">
+                        <div class="navbar-item has-dropdown">
+                            <div class="dropdown navbar-dropdown">
+                                <div class="dropdown-trigger">
+                                    <button class="button navbar-dropdown-button" aria-haspopup="true" aria-controls="dropdown-menu" data-target="dropdown-menu">
+                                        {% if  meta and meta.profile_image  %}
+                                            <figure class="image is-64x64 is-round">
+                                                <img src="{{ meta.profile_image_url }}">
+                                            </figure>
+                                        {% else %}
+                                            <i class="fa fa-user-circle-o fa-2x" aria-hidden="true"></i>
+                                        {% endif %}
+                                        <span class="icon is-small">
+                                            <i class="fa fa-angle-down" aria-hidden="true"></i>
+                                        </span>
+                                    </button>
+                                </div>
+                            
+                                <div class="dropdown-menu">
+                                    <div class="dropdown-content">
+                                    <div class="dropdown-item">Welcome meta.name!</div>
+                                    <hr class="dropdown-divider">
+                                    <a class="dropdown-item" href="/write/start/">
+                                        Write a story
+                                    </a>
+                                    <a class="navbar-item" href="/dashboard/">
+                                        Stories
+                                    </a>
+                                    <a class="navbar-item" href="/invite">
+                                        Invite co-auther
+                                    </a>
+                                    <hr class="navbar-divider">
+                                    <a class="navbar-item" href="/settings">
+                                        Settings
+                                    </a>
+                                    <a class="navbar-item" href="/help">
+                                        Help
+                                    </a>
+                                    <hr class="navbar-divider">
+                                    <a class="navbar-item" href="/signout">
+                                        Sign out
+                                    </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="content">
+
+            {% block content %}
+            {% endblock %}
+
         </div>
+
+        <footer class="footer">
+            
+            {% block footer %}
+                <div class="container has-text-centered">
+                    <p>All yours under
+                        <a href="https://creativecommons.org/publicdomain/zero/1.0/"> CC0</a> | 
+                        <a href="https://github.com/codervikash/scribble" target="blank">source.</a> | 
+                        Developed with &#x2764 by <a href="https://vikash.me/" target="blank">Vikash Kumar</a>
+                    </p>
+                </div>
+            {% endblock %}
+
+        </footer>
+
+        {% block js_files %}
+            <script src="/scripts/dashboard.js" async defer></script>
         {% endblock %}
-    </nav>
 
-    <div class="content">
-        {% block content %}
+        {% block discus %}
         {% endblock %}
-    </div>
-
-    <footer class="footer">
-        {% block footer %}
-        <div class="footer_social">
-            <span class="footer_social_icons">
-                <a href="https://twitter.com/codervikash"><img src="/images/twitter.svg"></a>
-            </span>
-            <span class="footer_social_icons">
-                <a href="https://github.com/codervikash"><img src="/images/github.svg"></a>
-            </span>
-            <span class="footer_social_icons">
-                <a href="https://www.linkedin.com/in/codervikash/"><img src="/images/linkedin.svg"></a>
-            </span>
-            <span class="footer_social_icons">
-                <a href="mailto:mailkumarvikash@gmail.com"><img src="/images/envelope.svg"></a>
-            </span>
-        </div>
-        <div class="footer_copyright">
-            <p>All yours under<a href="https://creativecommons.org/publicdomain/zero/1.0/"> CC0</a> | <a href="https://github.com/codervikash/vikash" target="blank">source.</a></p>
-        </div>
-    {% endblock %}
-</footer>
-
-    {% block js_files %}
-    <!-- base script file  -->
-    <script src="/scripts/app.js" async defer></script>
-    {% endblock %}
-
-    {% block discus %}
-    {% endblock %}
 
     </body>
 </html>

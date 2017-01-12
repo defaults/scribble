@@ -258,7 +258,7 @@ gulp.task('rev', function() {
 // Watch Files For Changes
 gulp.task('watch', function() {
     gulp.watch(folder.src + '**/*.js', ['lint', 'scripts', 'rev']);
-    gulp.watch(folder.src + '**/*.{css,scss}', ['css', 'rev']);
+    gulp.watch(folder.src + '**/*.scss', ['css', 'rev']);
     gulp.watch(
         folder.src + '**/*.{svg,jpeg,jpg,img,png}',
         ['images', 'html', 'css', 'rev']

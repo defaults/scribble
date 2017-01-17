@@ -100,18 +100,29 @@ class WriteHandler(base_controller.BaseHandler):
 
 
 class DashboardHandler(base_controller.BaseHandler):
+    """Main dashboard handlar"""
 
+    @authentication.authenticated
     def get(self):
-        pass
+        """Renders dashboard UI"""
+        articles, user, config
+        params = {
+            'page': 'dashboard',
+            'articles': articles,
+            'user': user,
+            'account_config': config
+         }
+        self.render_response('dashboard.html', **params)
 
-
-class ShortUrlHandler(base_controller.BaseHandler):
-    """short url handler implementation"""
-
-    def get(self):
-        pass
 
 class AccountHandlar(base_controller.BaseHandler):
-
+    """Account menegement page handlar"""
+    @authentication.authenticated
     def get(self):
-        pass
+        user, account_config
+        params = {
+            'page': 'account',
+            'user': user,
+            'account_config': config
+         }
+        self.render_response('setting.html', **params)

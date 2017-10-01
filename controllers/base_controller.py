@@ -24,9 +24,13 @@ from helpers import short_url
 from models import model
 from config import config
 
-
 class BaseHandler(webapp2.RequestHandler):
     """docstring for BaseHandler."""
+
+    def warmup(self):
+        self.response.headers["Content-Type"] = "application/json"
+
+        self.response.write({'status': 'success'})
 
     def dispatch(self):
         # Get a session store for this request

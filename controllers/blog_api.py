@@ -18,7 +18,6 @@ from config import config
 from controllers import authentication
 from controllers import base_controller
 
-
 class BlogApiHandler(base_controller.JsonRestHandler):
     """Base handler for blog API"""
 
@@ -76,7 +75,7 @@ class LoginApiHandler(BlogApiHandler):
         authentication_type = kwargs['authentication_type']
 
         try:
-            $user = authentication.LoginServicesHandler().verify_auth(
+            user = authentication.LoginServicesHandler().verify_auth(
                 authentication_token,
                 authentication_type
             )
@@ -84,8 +83,10 @@ class LoginApiHandler(BlogApiHandler):
                 self.redirect_to('first_time_setup')
             else:
                 self.redirect_to('dashboard')
+        except:
+            pass
 
-    def final_processor(user, login_type, authenticated_identifier):
+    def  final_processor(user, login_type, authenticated_identifier):
         """finallly checks for valid user and redirects after login.
         :param user:
             user object
@@ -212,7 +213,6 @@ class ArticleHandler(BlogApiHandler):
         DELETE method for articles - Exposed as `DELETE /api/article/<id>`
         """
         try:
-            id = kwargs['id']
             article = model.Article.get_by_id(long(id))
             if article:
                 article.soft_deleted = True

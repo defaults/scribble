@@ -69,7 +69,7 @@ def xsrf_protect(handlar):
 def admin(handlar):
     """Decorator to check if logged in user is admin. Returns 403 if not."""
 
-    def decorate(self, *args, *kwargs):
+    def decorate(self, *args, **kwargs):
         auth = self.auth
         user = auth.get_user_by_session()
 

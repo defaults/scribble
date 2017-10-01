@@ -17,12 +17,13 @@
             <div class="col-md-offset-8 col-md-4" style="margin:100px;">
                 <button onclick="phone_btn_onclick();">Login via SMS</button>
                 <form id="email_login" name="email_login" action="/api/auth/login" method="POST">
-                  <input type="email" id="email" name="email">
+                  <input type="email" id="email" name="email" placeholder="email">
                   <input type="text" id="xsrf" name="xsrf" value={{xsrf}}>
                   <input type="text" id="login_type" name="login_type" value="email">
                   <input type="submit" value="Submit">
                 </form>
                 <button onclick="email_btn_onclick();">Get magic url on email</button>
+                <button onclick="github_btn_onclick();">Github login</button>
             </div>
         </div>
     </body>
@@ -67,7 +68,7 @@ else if (response.status === "BAD_PARAMS") {
 // phone form submission handler
 function phone_btn_onclick() {
 AccountKit.login('PHONE',
-    {countryCode: '+91', phoneNumber: 8431260907},
+    {countryCode: '+91', phoneNumber: 7760833335},
     loginCallback);
 }
 

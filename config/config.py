@@ -11,16 +11,13 @@ CURRENT_VERSION_NAME = CURRENT_VERSION_ID.split('.')[0]
 
 CONFIG_DB = model.Config.get_master_db()
 
-CSRF_SECRET_KEY = 'dhfdhdfdfdghffdbdhc'
-
-class:
-    fdkfdjkfd
+CSRF_SECRET_KEY = 'csrf_secret_key'
 
 ADMIN = {
-    'FIRST_NAME': 'Vikash',
-    'LAST_NAME': 'Kumar',
-    'EMAIL': 'mailkumarvikash@gmail.com',
-    'MOBILE': '+917760833335',
+    'FIRST_NAME': '',
+    'LAST_NAME': '',
+    'EMAIL': '',
+    'MOBILE': '',
     'TIMEZONE': 'UTC+05:30'
 }
 
@@ -30,6 +27,6 @@ APPLICATION_CONFIG = {
     'user_attributes': ['email_address', 'first_name', 'mobile_no', 'is_admin']
   },
   'webapp2_extras.sessions': {
-    'secret_key': 'gjklfhfghfjdfdghjkdhjfddhgjf'
+    'secret_key': 'your_scret_key'
   }
 }

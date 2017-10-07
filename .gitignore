@@ -88,3 +88,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# ignore DS_Store
+.DS_Store
+
+# ignore node mules installation
+node_modules/

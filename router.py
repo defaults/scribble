@@ -42,5 +42,5 @@ app = webapp2.WSGIApplication([
 ], config=config.APPLICATION_CONFIG, debug=True)
 
 # error handlers
-app.error_handlers[404] = base_controller.errorHandlar
-app.error_handlers[500] = base_controller.errorHandlar
+app.error_handlers[404] = base_controller.error_handlar
+app.error_handlers[500] = base_controller.error_handlar

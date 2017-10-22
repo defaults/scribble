@@ -1,72 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge chrome=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
-    <!-- theming the status bar -->
-    <!-- Chrome & Firefox OS -->
-    <meta name="theme-color" content="#636569">
-    <!-- Windows Phone -->
-    <meta name="msapplication-navbutton-color" content="#636569">
-    <!-- iOS Safari -->
-    <meta name="apple-mobile-web-app-status-bar-style" content="#636569">
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+        <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+        <link rel="manifest" href="/manifest.json">
+        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#4f4f4f">
+        <meta name="theme-color" content="#ffffff">
 
-{% block seo %}
-  <meta name="description" content="A Google App Engine Blog Publishing Platform" />
-  <meta name="google-site-verification" content="DbfaEmBqSHBfNrEjIqF3UbAsQu-lXI21ZU-GgeM2bLs" />
-<!-- Facebook tag -->
- <meta property="og:tittle" content="Scribble" />
-  <meta property="og:url" content="https://scribble.vikash.me/" />
-  <meta property="og:type" content="website" />
-  <meta property="og:description" content="A Google App Engine Blog Publishing Platform"/>
-  <meta property="og:image" content="" />
-  <meta property="og:site_name" content="Home">
+        {% block seo %}
+        <meta name="google-site-verification" content="SDpxvVVmU0iOOw8NsbJHEoidHQAU9L1pzvIG8XUgM6" />
 
-<!-- twitter tag -->
-   <meta name="twitter:card" content="summary" />
-   <meta name="twitter:title" content="Scribble" />
-   <meta name="twitter:description" content="A Google App Engine Blog Publishing Platform"/>
-   <meta name="twitter:url" content="https://scribble.vikash.me/"/>
-   <meta name="twitter:creator" content="@CoderVikash">
-{% endblock %}
+        <meta itemprop="name" content="Welcome - Vikash Kumar">
+        <meta name="description" content="Personal homepage and blog of Vikash Kumar. @CoderVikash. Currently developer @Practo"/>
+        <meta itemprop="image" content="https://vikash.me/images/vikash_seo.png">
 
-  <title>{% block tittle %}Scribble{% endblock %}</title>
-  <!-- font -->
+        <!-- Facebook tag -->
+        <meta property="og:title" content="Home - Vikash Kumar" />
+        <meta property="og:url" content="https://vikash.me/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:description" content="Personal homepage and blog of Vikash Kumar. @CoderVikash. Currently developer @Practo"/>
+        <meta property="og:image" content="https://vikash.me/images/vikash_seo.png" />
+        <meta property="og:site_name" content="Homepage">
+        <meta property="fb:admins" content="1456060372" />
 
-  <!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/css/bootstrap.min.css" integrity="sha384-AysaV+vQoT3kOAXZkl02PThvDr8HYKPZhNT5h/CXfBThSRXQ6jW5DO2ekP5ViFdi" crossorigin="anonymous">
+        <!-- twitter tag -->
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Home - Vikash Kumar" />
+        <meta name="twitter:description" content="Personal homepage and blog of Vikash Kumar. @CoderVikash. Currently developer @Practo"/>
+        <meta name="twitter:url" content="https://vikash.me/"/>
+        <meta name="twitter:image" content="https://vikash.me/images/vikash_seo.png"/>
+        <meta name="twitter:creator" content="@CoderVikash">
+        <meta name="twitter:author" content="@CoderVikash">
+        {% endblock %}
 
-  <!-- font awsome cdn-->
-  <script src="https://use.fontawesome.com/d597d45785.js"></script>
-  <!-- Custom style link -->
-  <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+        <title>
+            {% block tittle %}Vikash Kumar{% endblock %}
+        </title>
 
+        {% block extra %}
+        {% endblock %}
 
-{% block extra %}
-{% endblock %}
-<!-- google analytics -->
-</head>
-<body>
-{% block nav %}
-<!-- NAV related html -->
-<nav class="navbar navbar-light bg-faded">
-  <a class="navbar-brand" href="#">Scribble</a>
-</nav>
-{% endblock %}
+        <style>
+            {% block stylesheet %}
+            {% endblock %}
+        </style>
+    </head>
+    <body>
 
-{% block content %}
-<!-- Content block -->
-{% endblock %}
+    <nav class="navigation">
+        {% block nav %}
+        <div class="nav_heading"><a href="http://vikash.me">Vikash Kumar</a></div>
+        <div class="nav_navigation">
+                <span class="nav_naviagation_list home_link"><a href="http://vikash.me">Home</a></span>
+                <span class="nav_naviagation_list blog_link"><a href="http://blog.vikash.me">Blog</a></span>
+                <span class="nav_naviagation_list projects_link"><a href="https://github.com/codervikash?tab=repositories" target="_blank">Projects</a></span>
+                <span class="nav_naviagation_list about_link"><a href="http://vikash.me/about">About</a></span>
+                <!-- <span class="nav_naviagation_list contact_link"><a href="/contact">Contact</a></span> -->
+        </div>
+        {% endblock %}
+    </nav>
 
-{% block footer %}
-{% block discus %}
-<!-- Discuss JS block -->
-{% endblock %}
-{% endblock %}
-<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc=" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.3.7/js/tether.min.js" integrity="sha384-XTs3FgkjiBgo8qjEjBk0tGmf3wPrWtA6coPfQDfFEY8AnYJwjalXCiosYRBIBZX8" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.5/js/bootstrap.min.js" integrity="sha384-BLiI7JTZm+JWlgKa0M0kGRpJbF2J8q+qreVrKBC47e3K6BW78kGLrCkeRX6I9RoK" crossorigin="anonymous"></script>
-</body>
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <footer class="footer">
+        {% block footer %}
+        <div class="footer_social">
+            <span class="footer_social_icons">
+                <a href="https://twitter.com/codervikash"><img src="/images/twitter.svg"></a>
+            </span>
+            <span class="footer_social_icons">
+                <a href="https://github.com/codervikash"><img src="/images/github.svg"></a>
+            </span>
+            <span class="footer_social_icons">
+                <a href="https://www.linkedin.com/in/codervikash/"><img src="/images/linkedin.svg"></a>
+            </span>
+            <span class="footer_social_icons">
+                <a href="mailto:mailkumarvikash@gmail.com"><img src="/images/envelope.svg"></a>
+            </span>
+        </div>
+        <div class="footer_copyright">
+            <p>All yours under<a href="https://creativecommons.org/publicdomain/zero/1.0/"> CC0</a> | <a href="https://github.com/codervikash/vikash" target="blank">source.</a></p>
+        </div>
+    {% endblock %}
+</footer>
+
+    {% block js_files %}
+    <!-- base script file  -->
+    <script src="/scripts/app.js" async defer></script>
+    {% endblock %}
+
+    {% block discus %}
+    {% endblock %}
+
+    </body>
 </html>

@@ -1,21 +1,22 @@
-import urllib2
+import random
+import re
+import string
+import json
+import os
+from datetime import datetime
+
 import urllib
+import urllib2
 
 import webapp2
+import jinja2
 from webapp2_extras import auth
 from webapp2_extras import sessions
 from webapp2_extras.auth import InvalidAuthIdError
 
 from config import config
 
-import random
-import re
-import string
-import json
-from datetime import datetime
-
 from google.appengine.api import mail
-from webapp2_extras import jinja2
 from webapp2_extras import routes
 from webapp2_extras import sessions
 
@@ -23,6 +24,22 @@ from helpers import markdown
 from helpers import short_url
 from models import model
 from config import config
+
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.FileSystemLoader(os.path.dirname(
+        'public/build/')),
+    extensions=['jinja2.ext.autoescape'],
+    autoescape=True)
+
+
+# method for handling errors
+def error_handlar(request, response, exception):
+    params = {
+        'error': exception
+    }
+    template = JINJA_ENVIRONMENT.get_template('templates/error.html')
+    response.write(template.render(params))
+
 
 class BaseHandler(webapp2.RequestHandler):
     """docstring for BaseHandler."""
@@ -90,8 +107,8 @@ class BaseHandler(webapp2.RequestHandler):
 
     def render_response(self, _template, **params):
         """Renders a template and writes the result to the response."""
-        temp = self.jinja2.render_template(_template, **params)
-        self.response.write(temp)
+        template = JINJA_ENVIRONMENT.get_template('templates/' + _template)
+        self.response.write(template.render(**params))
 
     def send_email(self, email, email_type, payload):
         """method to send mail"""

@@ -1,47 +1,62 @@
-{% extends "template.html" %}
+{% extends "templates/template.html" %}
 
 {% block seo %}
-  <meta name="description" content="Personal home page and blog of Vikash Kumar.
-  A passionate Geek & Developer. I love Python and algorithms.
-  @CoderVikash" />
-  <meta name="google-site-verification" content="DbfaEmBqSHBfNrEjIqF3UbAsQu-lXI21ZU-GgeM2bLs
-" />
+<meta name="google-site-verification" content="GhSWpL7W7Bxc4DAY1kzcRgpWhKUO5kDX5gCXIR94P9g" />
+
+<meta itemprop="name" content="Personal Blog - Vikash Kumar">
+<meta name="description" content="Personal Blog - Vikash Kumar. @CoderVikash. Currently developer @Practo"/>
+<meta itemprop="image" content="https://vikash.me/images/vikash_seo.png">
+
 <!-- Facebook tag -->
-  <meta property="og:tittle" content="Blog | Vikash Kumar" />
-  <meta property="og:url" content="https://blog.vikashkumar.me" />
-  <meta property="og:type" content="blog" />
-  <meta property="og:description" content="Personal home page and blog of Vikash Kumar.
-  A passionate Geek & Developer. I love Python and algorithms.
-  @CoderVikash"/>
-  <meta property="og:image" content="https://vikashkumar.me/static/img/100x100.jpeg" />
-  <meta property="og:site_name" content="Blog Vikash Kumar">
+<meta property="og:title" content="Personal Blog - Vikash Kumar" />
+<meta property="og:url" content="https://blog.vikash.me/" />
+<meta property="og:type" content="blog" />
+<meta property="og:description" content="Personal Blog of Vikash Kumar. @CoderVikash. Currently developer @Practo"/>
+<meta property="og:image" content="https://vikash.me/images/vikash_seo.png" />
+<meta property="og:site_name" content="Personal Blog">
+<meta property="fb:admins" content="1456060372" />
 
 <!-- twitter tag -->
-   <meta name="twitter:card" content="summary" />
-   <meta name="twitter:title" content="Blog | Vikash Kumar" />
-   <meta name="twitter:description" content="Personal home page and blog of Vikash Kumar.
-  A passionate Geek & Developer. I love Python and algorithms.
-
-  @CoderVikash"/>
-   <meta name="twitter:url" content="https://blog.vikashkumar.me"/>
-   <meta name="twitter:image" content="https://vikashkumar.me/static/img/100x100.jpeg"/>
-   <meta name="twitter:creator" content="@CoderVikash">
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Personal Blog - Vikash Kumar" />
+<meta name="twitter:description" content="Personal Blog of Vikash Kumar. @CoderVikash. Currently developer @Practo"/>
+<meta name="twitter:url" content="https://blog.vikash.me/"/>
+<meta name="twitter:image" content="https://vikash.me/images/vikash_seo.png"/>
+<meta name="twitter:creator" content="@CoderVikash">
+<meta name="twitter:author" content="@CoderVikash">
 {% endblock %}
-
 
 {% block tittle %}Blog | Vikash Kumar{% endblock %}
 
+{% block stylesheet %}
+{% include "stylesheets/article_list.css" %}
+{% endblock %}
 
 {% block content %}
-<div class="row" style="min-height: 41rem;">
-    <h1 class="tittle">Blog</h1>
-  {% for article in article %}
-    <div class="col-lg-12">
-      <a href="/{{article.url}}/">
-        <h2 class="post">{{article.tittle}}</h1>
-        <h3 class="time-post">{{article.date.strftime('%a, %B %d')}}</h3>
-      </a>
-    </div>
-  {% endfor %}
-</div>
+<main class="page_main">
+    <header class="page_title">Writings</header>
+    <div class="page_title_underline"></div>
+    <section class="blog_articles_section">
+        {% for article in article %}
+            <div class="blog_articles_row">
+                <span class="blog_articles_title">
+                    <a href="/{{article.url}}/">{{article.tittle}}</a>
+                </span>
+                <span class="blog_articles_desc">
+                    <span class="blog_articles_date"><img class="blog_articles_desc_img" src="/images/clock.svg" alt="">{{article.date.strftime('%b %d')}}</span>
+                    {% if article.tags %}
+                        <span class="blog_articles_tags"><img class="blog_articles_desc_img" src="/images/tag.svg" alt="">
+                            {% for tag in article.tags %}
+                                #{{tag}},
+                            {% endfor %}
+                        </span>
+                    {% endif %}
+                </span>
+            </div>
+        {% endfor %}
+    </section>
+</main>
+{% endblock %}
+
+{% block js_files %}
 {% endblock %}

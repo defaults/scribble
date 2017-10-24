@@ -263,13 +263,13 @@ gulp.task('css', [
 ]);
 
 // copy remaining css files
-gulp.task('copy',['copy-zenpen'], function() {
+gulp.task('copy',['copy-zenpen-fonts'], function() {
     return gulp.src(folder.src + '**/*.{xml,txt,json,css,ico,png}')
         .pipe(gulp.dest(folder.temp));
 });
 
 // copy remaining css files
-gulp.task('copy-zenpen', function() {
+gulp.task('copy-zenpen-fonts', function() {
     return gulp.src(folder.src + 'zenpen/css/fonts/**/*')
         .pipe(gulp.dest(folder.temp + 'zenpen/css/fonts'));
 });
@@ -294,13 +294,13 @@ gulp.task('rev', function() {
 // Watch Files For Changes
 gulp.task('watch', function() {
     gulp.watch(folder.src + '**/*.js', ['lint', 'scripts', 'rev']);
-    gulp.watch(folder.src + '**/*.scss', ['css', 'rev']);
+    gulp.watch(folder.src + '**/*.{css,scss}', ['css', 'rev']);
     gulp.watch(
         folder.src + '**/*.{svg,jpeg,jpg,img,png}',
         ['images', 'html', 'css', 'rev']
     );
     gulp.watch(folder.src + 'templates/**/*', ['html', 'rev']);
-    gulp.watch(folder.src + '**/*.{css,xml,txt,json}', ['copy', 'rev'])
+    gulp.watch(folder.src + '**/*.{xml,txt,json}', ['copy', 'rev'])
 });
 
 // Clean Output Directory

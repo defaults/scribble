@@ -54,11 +54,11 @@ gulp.task('lint', function() {
         .pipe(jshint.reporter('default'));
 });
 
-// JavaScript processing for blog js
-gulp.task('scripts-zenpen', function() {
-    var jsbuild = gulp.src(folder.src + 'zenpen/js/**/*.js')
+// JavaScript processing for dashboard
+gulp.task('scripts-dashboard', function() {
+    var jsbuild = gulp.src(folder.src + 'scripts/dashboard/*.js')
         .pipe(deporder())
-        .pipe(concat('blog.js'));
+        .pipe(concat('dashboard.js'));
 
     if (!devBuild) {
         jsbuild = jsbuild
@@ -82,25 +82,10 @@ gulp.task('scripts-blog_public', function() {
     return jsbuild.pipe(gulp.dest(folder.temp + 'scripts/'));
 });
 
-// Javascript processing for js files required for blog frontend
-gulp.task('scripts-blog_admin', function() {
-    var jsbuild = gulp.src(folder.src + 'scripts/admin/*.js')
-        .pipe(deporder())
-        .pipe(concat('admin.js'));
-
-    if (!devBuild) {
-        jsbuild = jsbuild
-            .pipe(stripdebug())
-            .pipe(uglify());
-    }
-    return jsbuild.pipe(gulp.dest(folder.temp + 'scripts/'));
-});
-
 // All Js master task
 gulp.task('scripts', [
-    'scripts-zenpen',
-    'scripts-blog_public',
-    'scripts-blog_admin'
+    'scripts-dashboard',
+    'scripts-blog_public'
 ]);
 
 // compress and optimize images
@@ -134,47 +119,31 @@ gulp.task('html_blog', function() {
     return page.pipe(gulp.dest(out));
 });
 
-gulp.task('html_zenpen', function() {
-    var
-        out = folder.temp + 'zenpen/',
-        page = gulp.src(folder.src + 'zenpen/**/*.html')
-            .pipe(newer(out))
-            .pipe(useref());
-
-    // minify production code
-    if (!devBuild) {
-        page = page.pipe(htmlclean());
-    }
-
-    return page.pipe(gulp.dest(out));
-});
-
 // All HTML task
 gulp.task('html', [
-    'html_blog',
-    'html_zenpen'
+    'html_blog'
 ]);
 
 // CSS processing
-gulp.task('css-home', function() {
+gulp.task('css-login', function() {
 
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
 
-    return gulp.src(folder.src + 'stylesheets/home.scss')
+    return gulp.src(folder.src + 'stylesheets/login.scss')
         .pipe(sass(scssOpts))
         .pipe(postcss(postCssOpts))
         .pipe(gulp.dest(folder.temp + 'stylesheets/'));
 });
 
-gulp.task('css-article_list', function() {
+gulp.task('css-blog', function() {
 
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
 
-    return gulp.src(folder.src + 'stylesheets/article_list.scss')
+    return gulp.src(folder.src + 'stylesheets/blog.scss')
         .pipe(sass(scssOpts))
         .pipe(postcss(postCssOpts))
         .pipe(gulp.dest(folder.temp + 'stylesheets/'));
@@ -192,15 +161,15 @@ gulp.task('css-article', function() {
         .pipe(gulp.dest(folder.temp + 'stylesheets/'));
 });
 
-gulp.task('css-zenpen', function() {
+gulp.task('css-editor', function() {
 
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
 
-    return gulp.src(folder.src + 'zenpen/css/*.css')
+    return gulp.src(folder.src + 'stylesheets/editor.scss')
         .pipe(postcss(postCssOpts))
-        .pipe(gulp.dest(folder.temp + 'zenpen/css'));
+        .pipe(gulp.dest(folder.temp + 'stylesheets/'));
 });
 
 gulp.task('css-dashboard', function() {
@@ -252,10 +221,10 @@ gulp.task('css-error', function() {
 
 // All css tasks
 gulp.task('css', [
-    'css-home',
-    'css-article_list',
+    'css-login',
+    'css-blog,
     'css-article',
-    'css-zenpen',
+    'css-editor',
     'css-dashboard',
     'css-setup',
     'css-setting',
@@ -263,15 +232,9 @@ gulp.task('css', [
 ]);
 
 // copy remaining css files
-gulp.task('copy',['copy-zenpen-fonts'], function() {
+gulp.task('copy', function() {
     return gulp.src(folder.src + '**/*.{xml,txt,json,css,ico,png}')
         .pipe(gulp.dest(folder.temp));
-});
-
-// copy remaining css files
-gulp.task('copy-zenpen-fonts', function() {
-    return gulp.src(folder.src + 'zenpen/css/fonts/**/*')
-        .pipe(gulp.dest(folder.temp + 'zenpen/css/fonts'));
 });
 
 // gulp task to add revision

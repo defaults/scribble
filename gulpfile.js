@@ -168,6 +168,7 @@ gulp.task('css-editor', function() {
     }
 
     return gulp.src(folder.src + 'stylesheets/editor.scss')
+        .pipe(sass(scssOpts))
         .pipe(postcss(postCssOpts))
         .pipe(gulp.dest(folder.temp + 'stylesheets/'));
 });
@@ -222,7 +223,7 @@ gulp.task('css-error', function() {
 // All css tasks
 gulp.task('css', [
     'css-login',
-    'css-blog,
+    'css-blog',
     'css-article',
     'css-editor',
     'css-dashboard',

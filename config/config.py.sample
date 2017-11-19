@@ -9,22 +9,35 @@ APPLICATION_ID = app_identity.get_application_id()
 CURRENT_VERSION_ID = os.environ.get('CURRENT_VERSION_ID')
 CURRENT_VERSION_NAME = CURRENT_VERSION_ID.split('.')[0]
 
+
+APP_LANG = 'en'
+
 CONFIG_DB = model.Config.get_master_db()
 
 CSRF_SECRET_KEY = 'YOUR_CSRF_SECRET_KEY'
 
 ADMIN = {
-    'FIRST_NAME': 'ADMIN_FIRST_NAME',
-    'LAST_NAME': 'ADMIN_LAST_NAME',
-    'EMAIL': '',                         // defaults to admin mail for app
-    'MOBILE': '',
-    'TIMEZONE': 'UTC'                   // defaults to UTC
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'email': 'john.doe@example.com',    // defaults to admin mail for app
+    'mobile': '',
+    'timezone': 'UTC'                   // defaults to UTC
+}
+
+FB_ACCOUNT_SECRET = {
+    'app_id': '',
+    'app_secret': ''
+}
+
+GITHUB_SECRET = {
+    'app_id': '',
+    'app_secret': ''
 }
 
 APPLICATION_CONFIG = {
   'webapp2_extras.auth': {
     'user_model': 'models.model.User',
-    'user_attributes': ['email_address', 'first_name', 'mobile_no', 'is_admin']
+    'user_attributes': ['first_name', 'email_address', 'mobile_no', 'is_admin']
   },
   'webapp2_extras.sessions': {
     'secret_key': 'YOUR_SECRET_KEY'

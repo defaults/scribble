@@ -94,3 +94,6 @@ ENV/
 
 # ignore node mules installation
 node_modules/
+
+# ignore config file
+config/config.py

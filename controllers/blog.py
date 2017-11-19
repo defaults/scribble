@@ -48,6 +48,9 @@ class LoginHandler(base_controller.BaseHandler):
     def logout(self):
         self.redirect('login')
 
+class FirstSetup(base_controller.BaseHandler):
+    def setup(self):
+        pass
 
 # handler for serving article
 class ArticleHandler(base_controller.BaseHandler):

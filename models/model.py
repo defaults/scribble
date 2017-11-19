@@ -138,17 +138,19 @@ class Auth(ndb.Model, Jsonifiable):
 
 class User(webapp2_extras.appengine.auth.models.User):
     """User model extending webapp2 auth expando user model"""
+    first_name = ndb.StringProperty(indexed=True)
+    last_name = ndb.StringProperty(indexed=False)
     email_address = ndb.StringProperty(indexed=True)
     mobile_no = ndb.StringProperty(indexed=True)
     is_admin = ndb.BooleanProperty(indexed=True, default=False)
     timezone = ndb.StringProperty(default='UTC')
 
     @classmethod
-    def create_user(cls, user_data, verified=False):
+    def add_new_user(cls, user_data, verified=False):
         """Creates new user
 
         :param user_data:
-            Array containing user data to save.
+            Dict containing user data to save.
         :param verified:
             Boolean value if user verified or not.
         :returns:
@@ -156,12 +158,12 @@ class User(webapp2_extras.appengine.auth.models.User):
         """
 
         status, user_data = cls.create_user(
-                        user_data.first_name,
+                        user_data['email'],
                         ['email_address', 'mobile_no'],
-                        first_name=user_data.first_name,
-                        last_name=user_data.last_name,
-                        email_address=user_data.email_address,
-                        mobile_no=user_data.mobile_no,
+                        first_name=user_data['first_name'],
+                        last_name=user_data['last_name'],
+                        email_address=user_data['email'],
+                        mobile_no=user_data['mobile'],
                         verified=verified)
 
         return status, user_data

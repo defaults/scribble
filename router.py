@@ -25,6 +25,11 @@ app = webapp2.WSGIApplication([
         name='logout',
         handler_method='logout', strict_slash=True),
     routes.RedirectRoute(
+        '/welcome/',
+        handler=blog.FirstSetup,
+        name='first_time_setup',
+        handler_method='setup', strict_slash=True),
+    routes.RedirectRoute(
         '/<article_url>/',
         handler=blog.ArticleHandler, name='article', strict_slash=True),
     routes.RedirectRoute(

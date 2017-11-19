@@ -86,7 +86,7 @@ class LoginApiHandler(BlogApiHandler):
         except:
             pass
 
-    def  final_processor(user, login_type, authenticated_identifier):
+    def  final_processor(self, user, login_type, authenticated_identifier):
         """finallly checks for valid user and redirects after login.
         :param user:
             user object
@@ -104,11 +104,11 @@ class LoginApiHandler(BlogApiHandler):
             self.redirect_to('dashboard')
 
         elif (login_type == 'fb_accountkit' and
-              config.ADMIN['mobile_no'] == authenticated_identifier) or \
+              config.ADMIN.mobile_no == authenticated_identifier) or \
             (login_type == 'email' and
-             config.ADMIN.mobile == authenticated_identifier):
-            self.user_model.create_user(
-                config.admin, verified=True)
+             config.ADMIN['email'] == authenticated_identifier):
+            self.user_model.add_new_user(
+                config.ADMIN, verified=True)
             self.redirect_to('first_time_setup')
 
         else:

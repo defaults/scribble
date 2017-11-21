@@ -17,9 +17,9 @@ from google.appengine.ext import ndb
 
 class JsonifiableEncoder(json.JSONEncoder):
     """JSON encoder"""
-    def default(self, obj):
+    def default(self, obj, **kwargs):
         if isinstance(obj, Jsonifiable):
-            result = json.loads(obj.to_json())
+            result = json.loads(obj.to_json(**kwargs))
             return result
 
 
@@ -52,20 +52,23 @@ class Jsonifiable:
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', key)
         return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-    def to_json(self):
+    def to_json(self, **kwargs):
         """
         Converts object to json.
         """
         result = {}
         a = self
+        skip_keys = kwargs.pop('skip_keys', [])
         properties = self.to_dict()
         # properties = dict(properties, **dict(id=self.key.id()))
         if isinstance(self, ndb.Model):
             properties['id'] = unicode(self.key.id())
         for key, value in properties.iteritems():
-            if isinstance(value, datetime):
-                value = value.strftime("%Y-%m-%d %H:%M:%S")
-            result[Jsonifiable.transform_to_camelcase(key)] = value
+            if key not in skip_keys:
+                if isinstance(value, datetime):
+                    value = value.strftime("%Y-%m-%d %H:%M:%S")
+                result[Jsonifiable.transform_to_camelcase(key)] = value
+
         return json.dumps(result)
 
     def from_json(self, json_string):
@@ -214,20 +217,32 @@ class User(webapp2_extras.appengine.auth.models.User):
         return cls.query(cls.mobile_no == mobile_no).get()
 
 
-class AuthConfig(ndb.Model, Jsonifiable):
+class Setting(ndb.Model, Jsonifiable):
     """Model for datastore to store the Authentication config."""
+
+    # primary and secondary color for blog
+    primary_color = ndb.StringProperty(default='#ffff')
+    secondary_color = ndb.StringProperty(default='#00000')
+
+    # google analytics related config
     google_analytics_id = ndb.StringProperty()
-    fb_accountkit_api_version = ndb.StringProperty(default='v1.0')
+
+    # fb account kit secrets
+    fb_accountkit_api_version = ndb.StringProperty(default='v1.1')
     fb_accountkit_app_id = ndb.StringProperty(default='')
     fb_accountkit_app_secret = ndb.StringProperty(default='')
+    fb_accountkit_app_client_token = ndb.StringProperty(default='')
     fb_accountkit_me_endpoint_url = ndb.StringProperty(
-        default='https://graph.accountkit.com/v1.0/me')
+        default='https://graph.accountkit.com/v1.1/me')
     fb_accountkit_token_exchange_url = ndb.StringProperty(
-        default='https://graph.accountkit.com/v1.0/access_token')
+        default='https://graph.accountkit.com/v1.1/access_token')
+
+    # github app secrets
     github_client_id = ndb.StringProperty(
         default='')
     github_client_secret = ndb.StringProperty(
         default='')
+
 
     @property
     def is_fb_accountkit_login_enabled(self):

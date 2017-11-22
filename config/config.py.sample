@@ -26,12 +26,13 @@ ADMIN = {
 
 FB_ACCOUNT_SECRET = {
     'app_id': '',
-    'app_secret': ''
+    'app_secret': '',
+    'client_token': ''
 }
 
 GITHUB_SECRET = {
-    'app_id': '',
-    'app_secret': ''
+    'client_id': '',
+    'client_secret': ''
 }
 
 APPLICATION_CONFIG = {

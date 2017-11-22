@@ -48,9 +48,13 @@ class LoginHandler(base_controller.BaseHandler):
     def logout(self):
         self.redirect('login')
 
+@authenticated
 class FirstSetup(base_controller.BaseHandler):
     def setup(self):
-        pass
+        params = model.Setting.to_json()
+        params['page'] = 'First Setup'
+
+        self.render_response('setup.html', **params)
 
 # handler for serving article
 class ArticleHandler(base_controller.BaseHandler):

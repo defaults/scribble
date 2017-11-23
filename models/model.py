@@ -130,7 +130,7 @@ class Tag(ndb.Model, Jsonifiable):
     soft_deleted = ndb.BooleanProperty(default=False)
 
 
-class Auth(ndb.Model, Jsonifiable):
+class AuthToken(ndb.Model, Jsonifiable):
     """Represents Authorisation token for verifing user"""
     token = ndb.StringProperty()
     token_type = ndb.StringProperty()
@@ -217,12 +217,8 @@ class User(webapp2_extras.appengine.auth.models.User):
         return cls.query(cls.mobile_no == mobile_no).get()
 
 
-class Setting(ndb.Model, Jsonifiable):
+class AuthSecret(ndb.Model, Jsonifiable):
     """Model for datastore to store the Authentication config."""
-
-    # primary and secondary color for blog
-    primary_color = ndb.StringProperty(default='#ffff')
-    secondary_color = ndb.StringProperty(default='#00000')
 
     # google analytics related config
     google_analytics_id = ndb.StringProperty()
@@ -256,6 +252,8 @@ class Setting(ndb.Model, Jsonifiable):
 
 
 class Config(ndb.Model):
+
+    # csrf secret key
     csrf_secret_key = ndb.StringProperty(
         indexed=True, default=uuid.uuid4().hex)
 

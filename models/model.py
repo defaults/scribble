@@ -58,13 +58,13 @@ class Jsonifiable:
         """
         result = {}
         a = self
-        skip_keys = kwargs.pop('skip_keys', [])
+        keys_to_skip = kwargs.pop('keys_to_skip', [])
         properties = self.to_dict()
         # properties = dict(properties, **dict(id=self.key.id()))
         if isinstance(self, ndb.Model):
             properties['id'] = unicode(self.key.id())
         for key, value in properties.iteritems():
-            if key not in skip_keys:
+            if key not in keys_to_skip:
                 if isinstance(value, datetime):
                     value = value.strftime("%Y-%m-%d %H:%M:%S")
                 result[Jsonifiable.transform_to_camelcase(key)] = value
@@ -239,6 +239,18 @@ class AuthSecret(ndb.Model, Jsonifiable):
     github_client_secret = ndb.StringProperty(
         default='')
 
+    @classmethod
+    def to_json(cls, with_secret_keys=False):
+        keys_to_skip = [
+            'fb_accountkit_app_id',
+            'fb_accountkit_app_secret',
+            'fb_accountkit_app_client_token'
+            'github_client_id',
+            'github_client_secret'
+        ]
+
+        return cls.to_json(keys_to_skip=keys_to_skip) \
+            if with_secret_keys else cls.to_json()
 
     @property
     def is_fb_accountkit_login_enabled(self):
@@ -248,7 +260,7 @@ class AuthSecret(ndb.Model, Jsonifiable):
 
     @property
     def github_login_enabled(self):
-        return bool(x=self.github_client_id and self.github_client_secret)
+        return bool(self.github_client_id and self.github_client_secret)
 
 
 class Config(ndb.Model):

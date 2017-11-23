@@ -51,10 +51,13 @@ class LoginHandler(base_controller.BaseHandler):
 @authenticated
 class FirstSetup(base_controller.BaseHandler):
     def setup(self):
-        params = model.Setting.to_json()
-        params['page'] = 'First Setup'
+        params = {
+            'page': 'First Setup',
+            'auth_secret': model.AuthSecret.to_json(True)
+        }
 
         self.render_response('setup.html', **params)
+
 
 # handler for serving article
 class ArticleHandler(base_controller.BaseHandler):

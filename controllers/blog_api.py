@@ -408,7 +408,7 @@ def ConfigHandlar(BlogApiHandler):
         GET method for user config (available for admin) -
         Exposed as `GET /api/config`
         """
-        self.send_success(config.CONFIG_DB)
+        self.send_success(model.AuthSecret.get)
 
     @authentication.authenticated
     @authentication.admin

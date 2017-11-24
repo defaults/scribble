@@ -249,8 +249,8 @@ class AuthSecret(ndb.Model, Jsonifiable):
             'github_client_secret'
         ]
 
-        return cls.to_json(keys_to_skip=keys_to_skip) \
-            if with_secret_keys else cls.to_json()
+        return super(cls, cls).to_json(keys_to_skip) \
+            if with_secret_keys else super(cls, cls).to_json()
 
     @property
     def is_fb_accountkit_login_enabled(self):

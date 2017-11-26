@@ -91,17 +91,17 @@ class Jsonifiable:
 
 class Article(ndb.Model, Jsonifiable):
     """Represents article written"""
-    url = ndb.StringProperty()
+    url = ndb.StringProperty(indexed=True)
     tittle = ndb.StringProperty()
     date = ndb.DateTimeProperty(default=datetime.now())
-    content = ndb.TextProperty()
-    short_url = ndb.StringProperty()
+    content = ndb.TextProperty(indexed=False)
+    short_url = ndb.StringProperty(indexed=True)
     stars = ndb.IntegerProperty(default=0)
     tags = ndb.StringProperty(repeated=True)
     published = ndb.BooleanProperty(default=True)
-    created_on = ndb.DateTimeProperty(auto_now_add=True)
+    created_on = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     modified_on = ndb.DateTimeProperty()
-    soft_deleted = ndb.BooleanProperty(default=False)
+    soft_deleted = ndb.BooleanProperty(default=False, indexed=True)
 
 
 class Subscriber(ndb.Model, Jsonifiable):
@@ -115,19 +115,19 @@ class Subscriber(ndb.Model, Jsonifiable):
 
 class ShortUrl(ndb.Model, Jsonifiable):
     """Represents short url for blog"""
-    full_url = ndb.StringProperty()
-    short_url = ndb.StringProperty()
+    full_url = ndb.StringProperty(indexed=True)
+    short_url = ndb.StringProperty(indexed=True)
     created_on = ndb.DateTimeProperty(auto_now_add=True)
     modified_on = ndb.DateTimeProperty()
-    soft_deleted = ndb.BooleanProperty(default=False)
+    soft_deleted = ndb.BooleanProperty(default=False, indexed=True)
 
 
 class Tag(ndb.Model, Jsonifiable):
     """Represents tags for blog"""
-    tag = ndb.StringProperty()
+    tag = ndb.StringProperty(indexed=True)
     created_on = ndb.DateTimeProperty(auto_now_add=True)
     modified_on = ndb.DateTimeProperty()
-    soft_deleted = ndb.BooleanProperty(default=False)
+    soft_deleted = ndb.BooleanProperty(default=False, indexed=True)
 
 
 class AuthToken(ndb.Model, Jsonifiable):

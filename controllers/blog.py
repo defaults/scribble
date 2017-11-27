@@ -53,6 +53,7 @@ class FirstSetup(base_controller.BaseHandler):
     def setup(self):
         params = {
             'page': 'First Setup',
+            'user': auth.get_user_by_session(),
             'auth_secret': model.AuthSecret.to_json(True)
         }
 

@@ -402,16 +402,24 @@ def ConfigHandlar(BlogApiHandler):
      get and update handlar
     """
     @authentication.authenticated
-    @authentication.admin
     def get(self):
         """
         GET method for user config (available for admin) -
         Exposed as `GET /api/config`
         """
-        self.send_success(model.AuthSecret.get)
+
+        with_secret_keys = True if self.request.get('with_secret_key') == 'false' \
+            and auth.get_by_auth_token().is_admin else False
+
+        response = {
+            'admin' : auth.get_user_by_session(),
+            'users' : model.User.query(model.User.is_admin = False).fetch(),
+            'auth_secret': model.AuthSecret.to_json(bool(with_secret_keys))
+        }
+
+        self.send_success(model.authsecret.get)
 
     @authentication.authenticated
-    @authentication.admin
     def post(self):
         """
         POST method for user config (available for admin) -

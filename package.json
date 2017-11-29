@@ -40,5 +40,7 @@
     "postcss-assets": "^4.1.0",
     "run-sequence": "^1.2.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "bulma": "^0.6.2"
+  }
 }

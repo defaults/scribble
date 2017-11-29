@@ -30,9 +30,6 @@ app = webapp2.WSGIApplication([
         name='first_time_setup',
         handler_method='setup', strict_slash=True),
     routes.RedirectRoute(
-        '/<article_url>/',
-        handler=blog.ArticleHandler, name='article', strict_slash=True),
-    routes.RedirectRoute(
         '/dashboard/',
         handler=blog.DashboardHandler, name='dashboard',
         strict_slash=True),
@@ -40,6 +37,9 @@ app = webapp2.WSGIApplication([
         '/account/',
         handler=blog.AccountHandlar, name='account',
         strict_slash=True),
+    routes.RedirectRoute(
+        '/<article_url>/',
+        handler=blog.ArticleHandler, name='article', strict_slash=True),
     routes.RedirectRoute(
         '/',
         handler=blog.BlogHandler, name='blog',

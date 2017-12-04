@@ -1,11 +1,9 @@
 // core colors
 @import "core/_colors";
 
+// core scss
+@import "_core";
+
 // article page partials
 @import "setup/_setup";
 
-// core partials
-@import "core/_core";
-@import "core/_nav";
-@import "core/_content";
-@import "core/_footer";

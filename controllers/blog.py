@@ -26,7 +26,6 @@ class BlogHandler(base_controller.BaseHandler):
         article = model.Article.query().order(-model.Article.date)
 
         params = {
-            'page': 'blog',
             'article': article
         }
         self.render_response('blog.html', **params)
@@ -37,22 +36,25 @@ class LoginHandler(base_controller.BaseHandler):
         auth = self.auth
         if not auth.get_user_by_session():
             params = {
-                'page': 'login',
                 'xsrf': authentication.CSRFHandlar().xsrf_token(
                     '/api/auth/login')
             }
+
             self.render_response('login.html', **params)
         else:
-            self.redirect_to('/dashboard')
+
+            self.redirect_to('dashboard')
 
     def logout(self):
-        self.redirect('login')
+        self.redirect_to(
+            'login',
+            message="Logged out! Login back to access account",
+            message_type=sucess
+        )
 
-@authenticated
 class FirstSetup(base_controller.BaseHandler):
     def setup(self):
         params = {
-            'page': 'First Setup',
             'admin': auth.get_user_by_session(),
             'auth_secret': model.AuthSecret.to_json(True)
         }
@@ -76,7 +78,6 @@ class ArticleHandler(base_controller.BaseHandler):
                 url = article.url
 
             params = {
-                'page': 'article',
                 'tittle': tittle,
                 'content': content,
                 'date': date,
@@ -85,38 +86,35 @@ class ArticleHandler(base_controller.BaseHandler):
             self.render_response('article.html', **params)
         else:
             self.abort(404)
-            return
+
+        return
 
 
 # handler for writing blog
 class WriteHandler(base_controller.BaseHandler):
     # add function to authenticate user
 
+    @authentication.authenticated
     def get(self, **kwargs):
-        auth = kwargs['token']
-        verify = model.Auth.query(model.Auth.token == auth).get()
-        if verify:
-            params = {
-                'page': 'write',
-                'welcome': ''
-            }
+        params = {
+            'xsrf': authentication.CSRFHandlar().xsrf_token(
+                '/api/auth/login')
+        }
 
-            self.render_response('zenpen.html', **params)
-            return
+        self.render_response('zenpen.html', **params)
 
-        # else redirecting to generate token
-        else:
-            self.redirect('/write')
-            return
+        return
 
 
 class DashboardHandler(base_controller.BaseHandler):
     """Main dashboard handlar"""
 
-    @authentication.authenticated
+    # @authentication.authenticated
     def get(self):
         """Renders dashboard UI"""
-        articles, user, config
+        articles = {}
+        user = {}
+        config = {}
         params = {
             'page': 'dashboard',
             'articles': articles,

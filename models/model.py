@@ -294,3 +294,14 @@ class Config(ndb.Model):
                 memcache.set('xsrf_secret', secret)
 
         return secret
+
+class Meta(ndb.Model):
+    """Meta data like seo token and blog name"""
+
+    blog_name = ndb.StringProperty(indexed=True)
+    fb_tag_key = ndb.StringProperty(indexed=True)
+    twitter_handlar = ndb.StringProperty(indexed=True)
+
+    @classmethod
+    def get_default_meta_values():
+        return {}

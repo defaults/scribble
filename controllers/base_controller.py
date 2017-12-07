@@ -35,7 +35,8 @@ JINJA_ENVIRONMENT = jinja2.Environment(
 # method for handling errors
 def error_handlar(request, response, exception):
     params = {
-        'error': exception
+        'error': exception,
+        'meta': {}
     }
     template = JINJA_ENVIRONMENT.get_template('templates/error.html')
     response.write(template.render(params))
@@ -107,6 +108,14 @@ class BaseHandler(webapp2.RequestHandler):
 
     def render_response(self, _template, **params):
         """Renders a template and writes the result to the response."""
+
+        default_meta = {}
+        # print "hi" +  default_meta
+        # if params.has_key('meta'):
+        #     params['meta'].update(default_meta)
+        # else:
+        params['meta'] = {}
+
         template = JINJA_ENVIRONMENT.get_template('templates/' + _template)
         self.response.write(template.render(**params))
 

@@ -43,3 +43,8 @@ Features in *italics* are coming soon. Check open pull requests and help by cont
 * [Bulma](https://bulma.io/)
 * [Font Awesome](https://fontawesome.com) (because its awsome! :bowtie:)
 
+##Contributing:
+Your contributions are always welcome, please fork thhe repo and send a PR. TO file bug raise a issue or directly contact me on my [mail](mailto:mailkumarvikash@gmail.com) or reach on twitter [@codervikash](https://twitter.com/codervikash)
+
+##Licence:
+MIT

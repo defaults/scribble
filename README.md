@@ -18,9 +18,12 @@ Features in *italics* are coming soon. Check open pull requests and help by cont
 * *Manager subscriptions, send subscription mails*
 
 ## Installation:
+### For usages/deploy:
 1. Clone the repo `git clone https://github.com/codervikash/scribble.git`.
-2. Run `setup.py` and add your initial details like name, email, mobile no(optional). This is used for signing in.
-3. If you want to run this as a subproject, redirect `<subdomain you wnat to use>` like:
+2. Run `npm install` to install npm dependencies.
+3. Run `gulp build` for prod build
+3. Run `setup.py` and add your initial details like name, email, mobile no(optional). This is used for signing in.
+4. If you want to run this as a subproject, redirect `<subdomain you wnat to use>` like:
 ```
     - url: /<sub_url_if_any>/api/.*
       script: api_router.app
@@ -28,6 +31,16 @@ Features in *italics* are coming soon. Check open pull requests and help by cont
     - url: /<sub_url_if_any>/.*
      script: router.app
 ```
+5. create a project in Google Cloud Platform - App Engine Env.
+6. To run server locally `dev_appserver.py app.yaml` or `gcloud app deploy  app.yaml --project <project_name>` todeploy to app engine.
+7. Congrats! Your blog is up and running! :grinning:
+
+### For Development:
+1. Clone the repo `git clone https://github.com/codervikash/scribble.git`.
+2. Run `npm install` to install npm dependencies.
+3. Run `gulp watch` for dev build and watch for changes in front end assets.
+4. Run `setup.py` and add your initial details like name, email, mobile no(optional). This is used for signing in.
+5. To run server locally `dev_appserver.py app.yaml`.
 
 ## Tech stack:
 ### Platform

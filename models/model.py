@@ -154,17 +154,17 @@ class User(webapp2_extras.appengine.auth.models.User):
         :returns:
             A tuple ``(User, timestamp)``, with status and user object
         """
-        try:
-            status, user_data = cls.create_user(
-                            user_data.first_name,
-                            ['email_address', 'mobile_no'],
-                            first_name=user_data.first_name,
-                            last_name=user_data.last_name,
-                            email_address=user_data.email_address,
-                            mobile_no=user_data.mobile_no,
-                            verified=verified)
 
-            return status, user_data
+        status, user_data = cls.create_user(
+                        user_data.first_name,
+                        ['email_address', 'mobile_no'],
+                        first_name=user_data.first_name,
+                        last_name=user_data.last_name,
+                        email_address=user_data.email_address,
+                        mobile_no=user_data.mobile_no,
+                        verified=verified)
+
+        return status, user_data
 
     @classmethod
     def get_by_auth_token(cls, user_id, token, subject='auth'):
@@ -212,7 +212,7 @@ class User(webapp2_extras.appengine.auth.models.User):
         return cls.query(cls.mobile_no == mobile_no).get()
 
 
-class AuthConfig(db.Model, Jsonifiable):
+class AuthConfig(ndb.Model, Jsonifiable):
     """Model for datastore to store the Authentication config."""
     google_analytics_id = ndb.StringProperty()
     fb_accountkit_api_version = ndb.StringProperty(default='v1.0')
@@ -228,19 +228,23 @@ class AuthConfig(db.Model, Jsonifiable):
         default='')
 
     @property
-    def self.is_fb_accountkit_login_enabled(self):
+    def is_fb_accountkit_login_enabled(self):
         """return """
         return bool(
             self.fb_accountkit_app_id and self.fb_accountkit_app_secret)
 
     @property
-    def self.github_login_enabled(self):
+    def github_login_enabled(self):
         return bool(x=self.github_client_id and self.github_client_secret)
 
 
 class Config(ndb.Model):
     csrf_secret_key = ndb.StringProperty(
-        indexed=True, default=uuid.uuid4().hex())
+        indexed=True, default=uuid.uuid4().hex)
+
+    @classmethod
+    def get_master_db(cls):
+        return cls.get_or_insert('master')
 
     @staticmethod
     def get_csrf_secret_key():

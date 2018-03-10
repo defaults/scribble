@@ -1,0 +1,80 @@
+{% extends "template.html" %}
+{% block tittle %}Scribble - Login{% endblock %}
+
+{% block content %}
+    <!-- Content block -->
+    <body>
+        <div class="alert" role="alert" style="display:none;">
+            <strong>Heads up!</strong> This alert needs your attention, but it's not super important.
+        </div>
+        <form id="fb_accountkit_login" name="fb_accountkit_login" action="/api/auth/login" method="POST" style="display: none;">
+          <input type="text" id="code" name="code">
+          <input type="text" id="xsrf" name="xsrf">
+          <input type="text" id="login_type" name="login_type" value="fb_accountkit">
+          <input type="submit" value="Submit">
+        </form>
+        <div class="fluid-container">
+            <div class="col-md-offset-8 col-md-4" style="margin:100px;">
+                <button onclick="phone_btn_onclick();">Login via SMS</button>
+                <form id="email_login" name="email_login" action="/api/auth/login" method="POST">
+                  <input type="email" id="email" name="email" placeholder="email">
+                  <input type="text" id="xsrf" name="xsrf" value={{xsrf}}>
+                  <input type="text" id="login_type" name="login_type" value="email">
+                  <input type="submit" value="Submit">
+                </form>
+                <button onclick="email_btn_onclick();">Get magic url on email</button>
+                <button onclick="github_btn_onclick();">Github login</button>
+            </div>
+        </div>
+    </body>
+{% endblock %}
+
+{% block footer %}
+<script src="https://sdk.accountkit.com/en_US/sdk.js"></script>
+<script>
+
+
+// initialize Account Kit with CSRF protection
+AccountKit_OnInteractive = function(){
+AccountKit.init(
+  {
+    appId:1058850810852691,
+    state:"{{xsrf}}",
+    version:"v1.0"
+  }
+);
+};
+
+// login callback
+function loginCallback(response) {
+console.log(response);
+if (response.status === "PARTIALLY_AUTHENTICATED") {
+  document.getElementById("code").value = response.code;
+  document.getElementById("xsrf").value = response.state;
+  document.getElementById("fb_accountkit_login").submit();
+}
+else if (response.status === "NOT_AUTHENTICATED") {
+    document.getElementsByClassName('alert').innerHtml = 'Authentication Issue';
+    document.getElementsByClassName('alert').style.display = 'block';
+    document.getElementsByClassName('alert').className += 'alert-danger';
+}
+else if (response.status === "BAD_PARAMS") {
+    document.getElementsByClassName('alert').innerHtml = 'Bad Params';
+    document.getElementsByClassName('alert').style.display = 'block';
+    document.getElementsByClassName('alert').className += 'alert-warning';
+}
+}
+
+// phone form submission handler
+function phone_btn_onclick() {
+AccountKit.login('PHONE',
+    {countryCode: '+91', phoneNumber: 7760833335},
+    loginCallback);
+}
+
+function email_btn_click() {
+    document.getElementById("email_login").submit();
+}
+</script>
+
+{% endblock %}

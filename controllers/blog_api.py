@@ -18,7 +18,6 @@ from config import config
 from controllers import authentication
 from controllers import base_controller
 
-
 class BlogApiHandler(base_controller.JsonRestHandler):
     """Base handler for blog API"""
 
@@ -36,16 +35,17 @@ class BlogApiHandler(base_controller.JsonRestHandler):
 class LoginApiHandler(BlogApiHandler):
     """login api handler - handles login and logout"""
 
-    @xsrf_protect
+    @authentication.xsrf_protect
     def login(self):
         login_type = self.request.get('login_type')
+        login_services_handlar = authentication.LoginServicesHandler()
         try:
             if login_type == 'fb_accountkit':
                 code = self.request.get('code')
 
                 authenticated_mobile_no = \
-                    authentication.LoginServicesHandler().accountkit_login(
-                        code, csrf)
+                    login_services_handlar.accountkit_login(
+                        code)
 
                 user = self.user_model.get_by_mobile_no(
                     authenticated_mobile_no)
@@ -61,7 +61,7 @@ class LoginApiHandler(BlogApiHandler):
                 self.send_success({'status': 'success'})
 
             else:
-                self.send_error(401, 'login type not supported')
+                self.send_error(401, 'Invalid Login.')
 
         except Exception as e:
             self.send_error(500, e)
@@ -70,28 +70,30 @@ class LoginApiHandler(BlogApiHandler):
         self.auth.unset_session()
         self.redirect_to('home')
 
-    def create_user(self, username, name, email, mobile_no, verified=False):
-        status, created_user = self.user_model.create_user(
-                                        username,
-                                        ['email_address', 'mobile_no'],
-                                        name=name,
-                                        email_address=email,
-                                        mobile_no=mobile_no,
-                                        verified=varified)
+    def verify(self, *args, **kwargs):
+        authentication_token = kwargs['authentication_token']
+        authentication_type = kwargs['authentication_type']
 
-        if status:
-            return created_user
-        else:
-            raise Exception('user creation failed')
+        try:
+            user = authentication.LoginServicesHandler().verify_auth(
+                authentication_token,
+                authentication_type
+            )
+            if user and authentication_type == 'signup' and user.is_admin:
+                self.redirect_to('first_time_setup')
+            else:
+                self.redirect_to('dashboard')
+        except:
+            pass
 
-    def final_processor(user, login_type, authenticated_identifier):
+    def  final_processor(user, login_type, authenticated_identifier):
         """finallly checks for valid user and redirects after login.
         :param user:
             user object
         :param login_type:
             user login_type
         :param authenticated_identifier:
-            user identifier by which user is authenticated
+            user identifier by which user is authentication.authenticated
         """
         if user:
             if not user.verified:
@@ -164,11 +166,11 @@ class ArticleHandler(BlogApiHandler):
             else:
                 raise TypeError
         except TypeError as te:
-            self.send_error(404, 'Resource not found')
+            self.send_error(404, 'Resource not found.')
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def post(self):
         """POST method for articles - Exposed as `POST /api/article`"""
         try:
@@ -183,7 +185,7 @@ class ArticleHandler(BlogApiHandler):
         except Exception as e:
                 self.send_error(404, e)
 
-    @authenticated
+    @authentication.authenticated
     def put(self, **kwargs):
         """
         PUT method for article - Exposed as `PATCH /api/article/<id>/`
@@ -205,13 +207,12 @@ class ArticleHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def delete(self, **kwargs):
         """
         DELETE method for articles - Exposed as `DELETE /api/article/<id>`
         """
         try:
-            id = kwargs['id']
             article = model.Article.get_by_id(long(id))
             if article:
                 article.soft_deleted = True
@@ -230,7 +231,7 @@ class SubscriberHandler(BlogApiHandler):
     Handler for subscribers - Exposes GET, POST, PATCH,
     DELETE for `/api/subscriber`
     """
-    @authenticated
+    @authentication.authenticated
     def get(self):
         """G
         ET method for subscribers - Exposed as `GET /api/subscribers`
@@ -253,7 +254,7 @@ class SubscriberHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def delete(self, **kwargs):
         """
         DELETE method for subscribers -
@@ -288,7 +289,7 @@ class TagHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def post(self):
         """
         POST method for all tags - Exposed as `POST /api/tag`
@@ -301,7 +302,7 @@ class TagHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def delete(self, **kwargs):
         """
         DELETE method for all tags - Exposed as `DELETE /api/tag/<id>`
@@ -350,7 +351,7 @@ class UrlShortnerHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def post(self):
         """
         POST method for url shortner -
@@ -374,7 +375,7 @@ class UrlShortnerHandler(BlogApiHandler):
         except Exception as e:
             self.send_error(500, e)
 
-    @authenticated
+    @authentication.authenticated
     def delete(self, **kwargs):
         """
         DELETE method for url shortner -
@@ -400,15 +401,17 @@ def ConfigHandlar(BlogApiHandler):
     Configuration
      get and update handlar
     """
-    @authenticated
+    @authentication.authenticated
+    @authentication.admin
     def get(self):
         """
         GET method for user config (available for admin) -
         Exposed as `GET /api/config`
         """
-        pass
+        self.send_success(config.CONFIG_DB)
 
-    @authenticated
+    @authentication.authenticated
+    @authentication.admin
     def post(self):
         """
         POST method for user config (available for admin) -
@@ -416,10 +419,11 @@ def ConfigHandlar(BlogApiHandler):
         """
         pass
 
-    @authenticated
+    @authentication.authenticated
+    @authentication.admin
     def put(self):
-            """
-            PATCH/PUT method for user config (available for admin) -
-            Exposed as `PATCH /api/config`
-            """
+        """
+        PATCH/PUT method for user config (available for admin) -
+        Exposed as `PATCH /api/config`
+        """
         pass

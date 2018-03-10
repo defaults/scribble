@@ -19,12 +19,12 @@ from google.appengine.ext import db
 from webapp2_extras.auth import InvalidAuthIdError
 
 from config import config
+from controllers import base_controller
 
 
 def authenticated(handler):
-    """
-        Decorator that checks if there's a user associated with the
-        current session. Will fail if there's no session present.
+    """Decorator that checks if there's a user associated with the
+    current session. Will fail if there's no session present.
     """
     def check_authentication(self, *args, **kwargs):
         auth = self.auth
@@ -36,21 +36,66 @@ def authenticated(handler):
         return check_authentication
 
 
+def xsrf_protect(handlar):
+    """Decorator to protect webapp2's get and post functions from XSRF.
+    Decorating a function with @xsrf_protect will verify that a valid
+    XSRF token has been submitted through the xsrf parameter.
+    Both GET and POST parameters are accepted.
+    If no token or an invalid token is received,
+    the decorated function is not called and a 403 error will be issued.
+    """
+
+    def decorate(self, *args, **kwargs):
+        csrf_handlar = CSRFHandlar()
+        path = os.environ.get('PATH_INFO', '/')
+        token = self.request.get('xsrf', None)
+        if not token:
+            self.error(403, 'Not authorised, bad request.')
+            return
+
+        user = csrf_handlar.ANONYMOUS_USER
+        if self.auth.get_user_by_session():
+            user = self.auth.get_user_by_session().get_id()
+        if not csrf_handlar.validate_token(config.CSRF_SECRET_KEY,
+                                           token, user, path):
+            self.error(403, 'Not authorised, invalid request.')
+            return
+
+        return handlar(self, *args, **kwargs)
+
+    return decorate
+
+
+def admin(handlar):
+    """Decorator to check if logged in user is admin. Returns 403 if not."""
+
+    def decorate(self, *args, **kwargs):
+        auth = self.auth
+        user = auth.get_user_by_session()
+
+        if not user.is_admin:
+            self.error(403, 'Not authorised, user is not a admin.')
+            return
+
+        return handlar(self, *args, **kwargs)
+
+
 class CSRFHandlar(base_controller.BaseHandler):
     """docstring for CSRFHandlar."""
 
-    # String used instead of user id when there is no user.
-    # Not that it makes sense to protect unauthenticated
-    # functionality from XSRF.
-    ANONYMOUS_USER = 'anonymous'
+    def __init__(self):
+        # String used instead of user id when there is no user.
+        # Not that it makes sense to protect unauthenticated
+        # functionality from XSRF.
+        self.ANONYMOUS_USER = 'anonymous'
 
-    # Delimiter character
-    DELIMITER = ':'
+        # DELIMITER character
+        self.DELIMITER = ':'
 
-    # 24 hours in seconds
-    DEFAULT_TIMEOUT_SECS = 1*60*60*24
+        # 24 hours in seconds
+        self.DEFAULT_TIMEOUT_SECS = 1*60*60*24
 
-    def generate_token(key, user_id, path="", when=None):
+    def generate_token(self, key, user_id, path="", when=None):
         """Generates a URL-safe token for the given user, action, time tuple.
         Args:
         key: secret key to use.
@@ -64,19 +109,20 @@ class CSRFHandlar(base_controller.BaseHandler):
         when = when or int(time.time())
         digester = hmac.new(str(key))
         digester.update(str(user_id))
-        digester.update(DELIMITER)
+        digester.update(self.DELIMITER)
         digester.update(str(path))
-        digester.update(DELIMITER)
+        digester.update(self.DELIMITER)
         digester.update(str(when))
         digest = digester.digest()
 
         token = base64.urlsafe_b64encode('%s%s%d' % (digest,
-                                                     DELIMITER,
+                                                     self.DELIMITER,
                                                      when))
+
         return token
 
-    def validate_token(key, token, user_id, path="", current_time=None,
-                       timeout=DEFAULT_TIMEOUT_SECS):
+    def validate_token(self, key, token, user_id, path="", current_time=None,
+                       timeout=0):
         """Validates that the given token authorizes the user for the action.
         Tokens are invalid if the time of issue is too old or if the token
         does not match what generateToken outputs (i.e. the token was forged).
@@ -94,9 +140,11 @@ class CSRFHandlar(base_controller.BaseHandler):
         """
         if not token:
             return False
+        if not timeout:
+            timeout = self.DEFAULT_TIMEOUT_SECS
         try:
             decoded = base64.urlsafe_b64decode(str(token))
-            token_time = long(decoded.split(DELIMITER)[-1])
+            token_time = long(decoded.split(self.DELIMITER)[-1])
         except (TypeError, ValueError):
             return False
         if current_time is None:
@@ -106,10 +154,12 @@ class CSRFHandlar(base_controller.BaseHandler):
             return False
 
         # The given token should match the generated one with the same time.
-        expected_token = generate_token(
+        expected_token = self.generate_token(
             key, user_id, path=path, when=token_time)
-        return const_time_compare(expected_token, token)
 
+        return self.const_time_compare(expected_token, token)
+
+    @staticmethod
     def const_time_compare(a, b):
         """Compares the the given strings in constant time."""
         if len(a) != len(b):
@@ -121,34 +171,7 @@ class CSRFHandlar(base_controller.BaseHandler):
 
         return equals == 0
 
-    def xsrf_protect(func):
-        """Decorator to protect webapp2's get and post functions from XSRF.
-        Decorating a function with @xsrf_protect will verify that a valid
-        XSRF token has been submitted through the xsrf parameter.
-        Both GET and POST parameters are accepted.
-        If no token or an invalid token is received,
-        the decorated function is not called and a 403 error will be issued.
-        """
-        def decorate(self, *args, **kwargs):
-            path = os.environ.get('PATH_INFO', '/')
-            token = self.request.get('xsrf', None)
-            if not token:
-                self.error(403)
-                return
-
-            user = ANONYMOUS_USER
-            if users.get_current_user():
-                user = users.get_current_user().user_id()
-            if not validate_token(config.CONFIG.CSRF_SECRET_KEY,
-                                  token, user, path):
-                self.error(403)
-                return
-
-        return func(self, *args, **kwargs)
-
-    return decorate
-
-    def xsrf_token(path=None):
+    def xsrf_token(self, path=None):
         """Generates an XSRF token for the given path.
         This function is mostly supposed to be used as a filter for a
         templating system, so that tokens can be conveniently generated
@@ -157,24 +180,23 @@ class CSRFHandlar(base_controller.BaseHandler):
         path: The path the token should be valid for. By default,
         the path of the current request.
         """
+        user = self.ANONYMOUS_USER
         if not path:
             path = os.environ.get('PATH_INFO')
-            user = ANONYMOUS_USER
-        if users.get_current_user():
-            user = users.get_current_user().user_id()
-        return generate_token(config.CONFIG.CSRF_SECRET_KEY, user, path)
+        if self.auth.get_user_by_session():
+            user = self.auth.get_user_by_session().get_id()
+
+        return self.generate_token(config.CSRF_SECRET_KEY, user, path)
 
 
 class LoginServicesHandler(CSRFHandlar):
     """login handlar - handler all types of login."""
 
-    def accountkit_login(self, code, csrf):
+    def accountkit_login(self, code):
         """Initialtes fb accountkit mobile no based login
 
         :params code:
             code to verify login request
-        :params csrf:
-            csrf nonce
         :returns:
             logged in mobile_no
         """
@@ -230,34 +252,32 @@ class LoginServicesHandler(CSRFHandlar):
 
         return
 
-    def verify_user(self, user_id, signup_token, type):
-        “"""varifies user based on request type and email.
+    def verify_auth(self, authentication_token, authentication_type):
+        """varifies user based on request type and email.
             currently used for email login verification
 
-        :params user_id:
-            user Id of user
-        :params signup_token:
+        :params authentication_token:
             signup token
-        :params type:
+        :params authentication_type:
             verification type
         :returns:
             user if verified
-        """”
+        """
         user, ts = self.user_model.get_by_auth_token(
-            int(user_id), signup_token, 'signup')
+            int(user_id), authentication_token, authentication_type)
 
         if not user:
             logging.info(
                 'Could not find any user with id "%s" signup token "%s"',
-                user_id, signup_token)
+                user_id, authentication_token)
             raise Exception('error', 'Could not find any user')
 
         # store user data in the session
         self.auth.set_session(
             self.auth.store.user_to_dict(user), remember=True)
 
-        if type == 'signup':
-            self.user_model.delete_signup_token(user.get_id(), signup_token)
+        self.user_model.delete_authentication_token(
+            user.get_id(), authentication_token)
 
         if not user.verified:
             user.verified = True

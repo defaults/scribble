@@ -1,0 +1,55 @@
+{% extends "template.html" %}
+{% block tittle %}Setup | Scribble{% endblock %}
+
+{% block content %}
+<div class="row main-content">
+    <form class="setup_form" action="/api/config" method="post">
+
+        <div class="google_analytics_setup_block">
+            <div class="form_elements">
+                <label for="google_analytics_id"></label>
+                <input type="text" name="google_analytics_id" value="{{google_analytics_id}}">
+            </div>
+        </div>
+
+        <div class="fb_accountkit_setup_block">
+            <div class="form_elements">
+                <label for="fb_accountkit_api_version"></label>
+                <input type="text" name="fb_accountkit_api_version" value="{{fb_accountkit_api_version}}">
+            </div>
+            <div class="form_elements">
+                <label for="fb_accountkit_app_id"></label>
+                <input type="text" name="fb_accountkit_app_id" value="{{fb_accountkit_app_id}}">
+            </div>
+            <div class="form_elements">
+                <label for="fb_accountkit_app_secret"></label>
+                <input type="text" name="fb_accountkit_app_secret" value="{{fb_accountkit_app_secret}}">
+            </div>
+            <div class="form_elements">
+                <label for="fb_accountkit_me_endpoint_url"></label>
+                <input type="text" name="fb_accountkit_me_endpoint_url" value="{{fb_accountkit_me_endpoint_url}}">
+            </div>
+            <div class="form_elements">
+                <label for="fb_accountkit_token_exchange_url"></label>
+                <input type="text" name="fb_accountkit_token_exchange_url" value="{{fb_accountkit_token_exchange_url}}">
+            </div>
+        </div>
+
+        <div class="github_login_setup_block">
+            <div class="form_elements">
+                <label for="github_client_id"></label>
+                <input type="text" name="github_client_id" value="{{github_client_id}}">
+            </div>
+            <div class="form_elements">
+                <label for="github_client_secret"></label>
+                <input type="text" name="github_client_secret" value="{{github_client_secret}}">
+            </div>
+        </div>
+
+        <div class="button submit_button">
+            <button type="button" name="button">Save and proceed</button>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

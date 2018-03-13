@@ -42,7 +42,6 @@ class LoginHandler(base_controller.BaseHandler):
 
             self.render_response('login.html', **params)
         else:
-
             self.redirect_to('dashboard')
 
     def logout(self):
@@ -109,12 +108,12 @@ class WriteHandler(base_controller.BaseHandler):
 class DashboardHandler(base_controller.BaseHandler):
     """Main dashboard handlar"""
 
-    # @authentication.authenticated
+
+    @authentication.authenticated
     def get(self):
         """Renders dashboard UI"""
-        articles = {}
-        user = {}
-        config = {}
+        articles = user = config = {}
+
         params = {
             'page': 'dashboard',
             'articles': articles,

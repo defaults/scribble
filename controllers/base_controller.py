@@ -25,6 +25,7 @@ from helpers import short_url
 from models import model
 from config import config
 
+
 JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(
         'public/build/')),

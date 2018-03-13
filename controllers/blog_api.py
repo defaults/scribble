@@ -95,6 +95,7 @@ class LoginApiHandler(BlogApiHandler):
         :param authenticated_identifier:
             user identifier by which user is authentication.authenticated
         """
+
         if user:
             if not user.verified:
                 user.verified = True
@@ -402,6 +403,8 @@ def ConfigHandlar(BlogApiHandler):
      get and update handlar
     """
     @authentication.authenticated
+
+    @authentication.admin
     def get(self):
         """
         GET method for user config (available for admin) -
@@ -420,6 +423,7 @@ def ConfigHandlar(BlogApiHandler):
         self.send_success(model.authsecret.get)
 
     @authentication.authenticated
+    @authentication.admin
     def post(self):
         """
         POST method for user config (available for admin) -

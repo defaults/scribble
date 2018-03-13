@@ -1,0 +1,45 @@
+// core partial
+html, body {
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    align-content: stretch;
+    background: $background;
+    will-change: transform;
+    min-height: 100vh;
+    font-size: 100%;
+    line-height: 1.5rem;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;
+}
+
+a {
+  color: $primaryTextDark;
+  text-decoration: none;
+}
+p {
+    word-wrap: break-word;
+}
+
+blockquote {
+    border-left: 4px solid $homePrimary;
+    margin-left: .5rem;
+    padding: .1rem 0 .1rem 1rem;
+    margin-right: 0px;
+    font-size: 1.3rem;
+    line-height: 1.5rem;
+    font-style: italic;
+    font-weight: 100;
+    background: $highlightedBackground;
+}

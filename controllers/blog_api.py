@@ -86,7 +86,7 @@ class LoginApiHandler(BlogApiHandler):
         except:
             pass
 
-    def  final_processor(user, login_type, authenticated_identifier):
+    def  final_processor(self, user, login_type, authenticated_identifier):
         """finallly checks for valid user and redirects after login.
         :param user:
             user object
@@ -95,6 +95,7 @@ class LoginApiHandler(BlogApiHandler):
         :param authenticated_identifier:
             user identifier by which user is authentication.authenticated
         """
+
         if user:
             if not user.verified:
                 user.verified = True
@@ -104,11 +105,11 @@ class LoginApiHandler(BlogApiHandler):
             self.redirect_to('dashboard')
 
         elif (login_type == 'fb_accountkit' and
-              config.ADMIN['mobile_no'] == authenticated_identifier) or \
+              config.ADMIN.mobile_no == authenticated_identifier) or \
             (login_type == 'email' and
-             config.ADMIN.mobile == authenticated_identifier):
-            self.user_model.create_user(
-                config.admin, verified=True)
+             config.ADMIN['email'] == authenticated_identifier):
+            self.user_model.add_new_user(
+                config.ADMIN, verified=True)
             self.redirect_to('first_time_setup')
 
         else:
@@ -402,13 +403,24 @@ def ConfigHandlar(BlogApiHandler):
      get and update handlar
     """
     @authentication.authenticated
+
     @authentication.admin
     def get(self):
         """
         GET method for user config (available for admin) -
         Exposed as `GET /api/config`
         """
-        self.send_success(config.CONFIG_DB)
+
+        with_secret_keys = True if self.request.get('with_secret_key') == 'false' \
+            and auth.get_by_auth_token().is_admin else False
+
+        response = {
+            'admin' : auth.get_user_by_session(),
+            'users' : model.User.query(model.User.is_admin = False).fetch(),
+            'auth_secret': model.AuthSecret.to_json(bool(with_secret_keys))
+        }
+
+        self.send_success(model.authsecret.get)
 
     @authentication.authenticated
     @authentication.admin

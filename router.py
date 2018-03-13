@@ -25,8 +25,10 @@ app = webapp2.WSGIApplication([
         name='logout',
         handler_method='logout', strict_slash=True),
     routes.RedirectRoute(
-        '/<article_url>/',
-        handler=blog.ArticleHandler, name='article', strict_slash=True),
+        '/welcome/',
+        handler=blog.FirstSetup,
+        name='first_time_setup',
+        handler_method='setup', strict_slash=True),
     routes.RedirectRoute(
         '/dashboard/',
         handler=blog.DashboardHandler, name='dashboard',
@@ -36,11 +38,14 @@ app = webapp2.WSGIApplication([
         handler=blog.AccountHandlar, name='account',
         strict_slash=True),
     routes.RedirectRoute(
+        '/<article_url>/',
+        handler=blog.ArticleHandler, name='article', strict_slash=True),
+    routes.RedirectRoute(
         '/',
         handler=blog.BlogHandler, name='blog',
         strict_slash=True),
 ], config=config.APPLICATION_CONFIG, debug=True)
 
 # error handlers
-app.error_handlers[404] = base_controller.errorHandlar
-app.error_handlers[500] = base_controller.errorHandlar
+app.error_handlers[404] = base_controller.error_handlar
+app.error_handlers[500] = base_controller.error_handlar

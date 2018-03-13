@@ -17,9 +17,9 @@ from google.appengine.ext import ndb
 
 class JsonifiableEncoder(json.JSONEncoder):
     """JSON encoder"""
-    def default(self, obj):
+    def default(self, obj, **kwargs):
         if isinstance(obj, Jsonifiable):
-            result = json.loads(obj.to_json())
+            result = json.loads(obj.to_json(**kwargs))
             return result
 
 
@@ -52,20 +52,23 @@ class Jsonifiable:
         s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', key)
         return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-    def to_json(self):
+    def to_json(self, **kwargs):
         """
         Converts object to json.
         """
         result = {}
         a = self
+        keys_to_skip = kwargs.pop('keys_to_skip', [])
         properties = self.to_dict()
         # properties = dict(properties, **dict(id=self.key.id()))
         if isinstance(self, ndb.Model):
             properties['id'] = unicode(self.key.id())
         for key, value in properties.iteritems():
-            if isinstance(value, datetime):
-                value = value.strftime("%Y-%m-%d %H:%M:%S")
-            result[Jsonifiable.transform_to_camelcase(key)] = value
+            if key not in keys_to_skip:
+                if isinstance(value, datetime):
+                    value = value.strftime("%Y-%m-%d %H:%M:%S")
+                result[Jsonifiable.transform_to_camelcase(key)] = value
+
         return json.dumps(result)
 
     def from_json(self, json_string):
@@ -88,17 +91,17 @@ class Jsonifiable:
 
 class Article(ndb.Model, Jsonifiable):
     """Represents article written"""
-    url = ndb.StringProperty()
+    url = ndb.StringProperty(indexed=True)
     tittle = ndb.StringProperty()
     date = ndb.DateTimeProperty(default=datetime.now())
-    content = ndb.TextProperty()
-    short_url = ndb.StringProperty()
+    content = ndb.TextProperty(indexed=False)
+    short_url = ndb.StringProperty(indexed=True)
     stars = ndb.IntegerProperty(default=0)
     tags = ndb.StringProperty(repeated=True)
     published = ndb.BooleanProperty(default=True)
-    created_on = ndb.DateTimeProperty(auto_now_add=True)
+    created_on = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
     modified_on = ndb.DateTimeProperty()
-    soft_deleted = ndb.BooleanProperty(default=False)
+    soft_deleted = ndb.BooleanProperty(default=False, indexed=True)
 
 
 class Subscriber(ndb.Model, Jsonifiable):
@@ -112,22 +115,22 @@ class Subscriber(ndb.Model, Jsonifiable):
 
 class ShortUrl(ndb.Model, Jsonifiable):
     """Represents short url for blog"""
-    full_url = ndb.StringProperty()
-    short_url = ndb.StringProperty()
+    full_url = ndb.StringProperty(indexed=True)
+    short_url = ndb.StringProperty(indexed=True)
     created_on = ndb.DateTimeProperty(auto_now_add=True)
     modified_on = ndb.DateTimeProperty()
-    soft_deleted = ndb.BooleanProperty(default=False)
+    soft_deleted = ndb.BooleanProperty(default=False, indexed=True)
 
 
 class Tag(ndb.Model, Jsonifiable):
     """Represents tags for blog"""
-    tag = ndb.StringProperty()
+    tag = ndb.StringProperty(indexed=True)
     created_on = ndb.DateTimeProperty(auto_now_add=True)
     modified_on = ndb.DateTimeProperty()
-    soft_deleted = ndb.BooleanProperty(default=False)
+    soft_deleted = ndb.BooleanProperty(default=False, indexed=True)
 
 
-class Auth(ndb.Model, Jsonifiable):
+class AuthToken(ndb.Model, Jsonifiable):
     """Represents Authorisation token for verifing user"""
     token = ndb.StringProperty()
     token_type = ndb.StringProperty()
@@ -138,17 +141,19 @@ class Auth(ndb.Model, Jsonifiable):
 
 class User(webapp2_extras.appengine.auth.models.User):
     """User model extending webapp2 auth expando user model"""
+    first_name = ndb.StringProperty(indexed=True)
+    last_name = ndb.StringProperty(indexed=False)
     email_address = ndb.StringProperty(indexed=True)
     mobile_no = ndb.StringProperty(indexed=True)
     is_admin = ndb.BooleanProperty(indexed=True, default=False)
     timezone = ndb.StringProperty(default='UTC')
 
     @classmethod
-    def create_user(cls, user_data, verified=False):
+    def add_new_user(cls, user_data, verified=False):
         """Creates new user
 
         :param user_data:
-            Array containing user data to save.
+            Dict containing user data to save.
         :param verified:
             Boolean value if user verified or not.
         :returns:
@@ -156,12 +161,12 @@ class User(webapp2_extras.appengine.auth.models.User):
         """
 
         status, user_data = cls.create_user(
-                        user_data.first_name,
+                        user_data['email'],
                         ['email_address', 'mobile_no'],
-                        first_name=user_data.first_name,
-                        last_name=user_data.last_name,
-                        email_address=user_data.email_address,
-                        mobile_no=user_data.mobile_no,
+                        first_name=user_data['first_name'],
+                        last_name=user_data['last_name'],
+                        email_address=user_data['email'],
+                        mobile_no=user_data['mobile'],
                         verified=verified)
 
         return status, user_data
@@ -212,20 +217,40 @@ class User(webapp2_extras.appengine.auth.models.User):
         return cls.query(cls.mobile_no == mobile_no).get()
 
 
-class AuthConfig(ndb.Model, Jsonifiable):
+class AuthSecret(ndb.Model, Jsonifiable):
     """Model for datastore to store the Authentication config."""
+
+    # google analytics related config
     google_analytics_id = ndb.StringProperty()
-    fb_accountkit_api_version = ndb.StringProperty(default='v1.0')
+
+    # fb account kit secrets
+    fb_accountkit_api_version = ndb.StringProperty(default='v1.1')
     fb_accountkit_app_id = ndb.StringProperty(default='')
     fb_accountkit_app_secret = ndb.StringProperty(default='')
+    fb_accountkit_app_client_token = ndb.StringProperty(default='')
     fb_accountkit_me_endpoint_url = ndb.StringProperty(
-        default='https://graph.accountkit.com/v1.0/me')
+        default='https://graph.accountkit.com/v1.1/me')
     fb_accountkit_token_exchange_url = ndb.StringProperty(
-        default='https://graph.accountkit.com/v1.0/access_token')
+        default='https://graph.accountkit.com/v1.1/access_token')
+
+    # github app secrets
     github_client_id = ndb.StringProperty(
         default='')
     github_client_secret = ndb.StringProperty(
         default='')
+
+    @classmethod
+    def to_json(cls, with_secret_keys=False):
+        keys_to_skip = [
+            'fb_accountkit_app_id',
+            'fb_accountkit_app_secret',
+            'fb_accountkit_app_client_token'
+            'github_client_id',
+            'github_client_secret'
+        ]
+
+        return super(cls, cls).to_json(keys_to_skip) \
+            if with_secret_keys else super(cls, cls).to_json()
 
     @property
     def is_fb_accountkit_login_enabled(self):
@@ -235,10 +260,12 @@ class AuthConfig(ndb.Model, Jsonifiable):
 
     @property
     def github_login_enabled(self):
-        return bool(x=self.github_client_id and self.github_client_secret)
+        return bool(self.github_client_id and self.github_client_secret)
 
 
 class Config(ndb.Model):
+
+    # csrf secret key
     csrf_secret_key = ndb.StringProperty(
         indexed=True, default=uuid.uuid4().hex)
 
@@ -267,3 +294,14 @@ class Config(ndb.Model):
                 memcache.set('xsrf_secret', secret)
 
         return secret
+
+class Meta(ndb.Model):
+    """Meta data like seo token and blog name"""
+
+    blog_name = ndb.StringProperty(indexed=True)
+    fb_tag_key = ndb.StringProperty(indexed=True)
+    twitter_handlar = ndb.StringProperty(indexed=True)
+
+    @classmethod
+    def get_default_meta_values():
+        return {}

@@ -1,35 +1,43 @@
-{% extends "template.html" %}
+{% extends "templates/template.html" %}
 {% block tittle %}Scribble - Login{% endblock %}
 
-{% block content %}
-    <!-- Content block -->
-    <body>
-        <div class="alert" role="alert" style="display:none;">
-            <strong>Heads up!</strong> This alert needs your attention, but it's not super important.
-        </div>
-        <form id="fb_accountkit_login" name="fb_accountkit_login" action="/api/auth/login" method="POST" style="display: none;">
-          <input type="text" id="code" name="code">
-          <input type="text" id="xsrf" name="xsrf">
-          <input type="text" id="login_type" name="login_type" value="fb_accountkit">
-          <input type="submit" value="Submit">
-        </form>
-        <div class="fluid-container">
-            <div class="col-md-offset-8 col-md-4" style="margin:100px;">
-                <button onclick="phone_btn_onclick();">Login via SMS</button>
-                <form id="email_login" name="email_login" action="/api/auth/login" method="POST">
-                  <input type="email" id="email" name="email" placeholder="email">
-                  <input type="text" id="xsrf" name="xsrf" value={{xsrf}}>
-                  <input type="text" id="login_type" name="login_type" value="email">
-                  <input type="submit" value="Submit">
-                </form>
-                <button onclick="email_btn_onclick();">Get magic url on email</button>
-                <button onclick="github_btn_onclick();">Github login</button>
-            </div>
-        </div>
-    </body>
+{% block stylesheet %}
+{% include "stylesheets/login.css" %}
 {% endblock %}
 
-{% block footer %}
+{% block content %}
+<section class=section">
+    <div class="login_alert" role="alert" style="display:none;">
+        <strong>Heads up!</strong> This alert needs your attention, but it's not super important.
+    </div>
+    <div class="container is-one-quarter-desktop is-pulled-right">
+        <h1 class="title">Login</h2>
+        <div class="content">
+            <form id="fb_accountkit_login" name="fb_accountkit_login" action="/api/auth/login" method="POST" style="display: none;">
+                <input type="text" id="code" name="code">
+                <input type="text" id="xsrf" name="xsrf">
+                <input type="text" id="login_type" name="login_type" value="fb_accountkit">
+                <input type="submit" value="Submit">
+            </form>
+            <div class="fluid-container">
+                <div class="col-md-offset-8 col-md-4" style="margin:100px;">
+                    <button class="login_btn_accountkit" onclick="phone_btn_onclick();">Login via SMS</button>
+                    <form id="email_login" name="email_login" action="/api/auth/login" method="POST">
+                        <input type="text" id="xsrf" name="xsrf" value={{xsrf}}>
+                        <input type="text" id="login_type" name="login_type" value="email">
+                        <input type="text" id="email" name="email" value="mailkumarvikash@gmail.com">
+                        <input type="submit" value="Submit">
+                    </form>
+                    <button class="login_btn_email" onclick="email_btn_onclick();">Get magic url on Email</button>
+                    <button class="login_btn_github" onclick="github_btn_onclick();">Github via login</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block js_files %}
 <script src="https://sdk.accountkit.com/en_US/sdk.js"></script>
 <script>
 
@@ -68,13 +76,17 @@ else if (response.status === "BAD_PARAMS") {
 // phone form submission handler
 function phone_btn_onclick() {
 AccountKit.login('PHONE',
-    {countryCode: '+91', phoneNumber: 7760833335},
+    {countryCode: '+91', phoneNumber: "{{user.mobile}}"},
     loginCallback);
 }
 
 function email_btn_click() {
     document.getElementById("email_login").submit();
 }
+
+function github_btn_inclick() {
+}
+
 </script>
 
 {% endblock %}

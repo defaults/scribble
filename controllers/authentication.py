@@ -50,7 +50,7 @@ def xsrf_protect(handlar):
         path = os.environ.get('PATH_INFO', '/')
         token = self.request.get('xsrf', None)
         if not token:
-            self.error(403, 'Not authorised, bad request.')
+            self.send_error(403, 'Not authorised, bad request.')
             return
 
         user = csrf_handlar.ANONYMOUS_USER
@@ -58,7 +58,7 @@ def xsrf_protect(handlar):
             user = self.auth.get_user_by_session().get_id()
         if not csrf_handlar.validate_token(config.CSRF_SECRET_KEY,
                                            token, user, path):
-            self.error(403, 'Not authorised, invalid request.')
+            self.send_error(403, 'Not authorised, invalid request.')
             return
 
         return handlar(self, *args, **kwargs)
@@ -74,7 +74,7 @@ def admin(handlar):
         user = auth.get_user_by_session()
 
         if not user.is_admin:
-            self.error(403, 'Not authorised, user is not a admin.')
+            self.send_error(403, 'Not authorised, user is not a admin.')
             return
 
         return handlar(self, *args, **kwargs)

@@ -1,5 +1,4 @@
 # Scribble - Blogging Platform
-=====
 
 Scribble is a light weight blogging platform build on Google Cloud Platform. Its a light weight blogging platform ideal for developers or personal bloggers.
 

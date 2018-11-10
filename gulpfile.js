@@ -22,7 +22,7 @@ var
     del = require('del'),
     rev = require('gulp-rev-all'),
     useref = require('gulp-useref'),
-    runSequence = require('run-sequence'),
+
     // development mode?
     devBuild = true,
 
@@ -65,6 +65,7 @@ gulp.task('scripts-dashboard', function() {
             .pipe(stripdebug())
             .pipe(uglify());
     }
+
     return jsbuild.pipe(gulp.dest(folder.temp + 'zenpen/js/'));
 });
 
@@ -83,10 +84,10 @@ gulp.task('scripts-blog_public', function() {
 });
 
 // All Js master task
-gulp.task('scripts', [
+gulp.task('scripts', gulp.series(
     'scripts-dashboard',
     'scripts-blog_public'
-]);
+));
 
 // compress and optimize images
 gulp.task('images', function() {
@@ -120,13 +121,12 @@ gulp.task('html_blog', function() {
 });
 
 // All HTML task
-gulp.task('html', [
+gulp.task('html', gulp.series(
     'html_blog'
-]);
+));
 
 // CSS processing
 gulp.task('css-login', function() {
-
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
@@ -138,7 +138,6 @@ gulp.task('css-login', function() {
 });
 
 gulp.task('css-blog', function() {
-
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
@@ -150,7 +149,6 @@ gulp.task('css-blog', function() {
 });
 
 gulp.task('css-article', function() {
-
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
@@ -162,7 +160,6 @@ gulp.task('css-article', function() {
 });
 
 gulp.task('css-editor', function() {
-
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
@@ -174,7 +171,6 @@ gulp.task('css-editor', function() {
 });
 
 gulp.task('css-dashboard', function() {
-
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
@@ -186,7 +182,6 @@ gulp.task('css-dashboard', function() {
 });
 
 gulp.task('css-setup', function() {
-
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
@@ -198,7 +193,6 @@ gulp.task('css-setup', function() {
 });
 
 gulp.task('css-setting', function() {
-
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
@@ -208,8 +202,8 @@ gulp.task('css-setting', function() {
         .pipe(postcss(postCssOpts))
         .pipe(gulp.dest(folder.temp + 'stylesheets/'));
 });
-gulp.task('css-error', function() {
 
+gulp.task('css-error', function() {
     if (!devBuild) {
         postCssOpts.push(cssnano);
     }
@@ -221,7 +215,7 @@ gulp.task('css-error', function() {
 });
 
 // All css tasks
-gulp.task('css', [
+gulp.task('css', gulp.series(
     'css-login',
     'css-blog',
     'css-article',
@@ -230,7 +224,7 @@ gulp.task('css', [
     'css-setup',
     'css-setting',
     'css-error'
-]);
+));
 
 // copy remaining css files
 gulp.task('copy', function() {
@@ -240,7 +234,7 @@ gulp.task('copy', function() {
 
 // gulp task to add revision
 gulp.task('rev', function() {
-    revisionTask = gulp.src(folder.temp + '**/*')
+    revisionTask = gulp.src(folder.temp + '**/*');
     if (!devBuild) {
         revisionTask = revisionTask
             .pipe(rev.revision({
@@ -248,23 +242,22 @@ gulp.task('rev', function() {
                 dontUpdateReference: ['.png','.html','.xml','.json','.txt']
             }))
             .pipe(gulp.dest(folder.build))
-            .pipe(rev.manifestFile())
-
+            .pipe(rev.manifestFile());
     }
 
-    return revisionTask.pipe(gulp.dest(folder.build))
+    return revisionTask.pipe(gulp.dest(folder.build));
 });
 
 // Watch Files For Changes
 gulp.task('watch', function() {
-    gulp.watch(folder.src + '**/*.js', ['lint', 'scripts', 'rev']);
-    gulp.watch(folder.src + '**/*.scss', ['css', 'rev']);
+    gulp.watch(folder.src + '**/*.js', gulp.series('lint', 'scripts', 'rev'));
+    gulp.watch(folder.src + '**/*.scss', gulp.series('css', 'rev'));
     gulp.watch(
         folder.src + '**/*.{svg,jpeg,jpg,img,png}',
-        ['images', 'html', 'css', 'rev']
+        gulp.series('images', 'html', 'css', 'rev')
     );
-    gulp.watch(folder.src + 'templates/**/*', ['html', 'rev']);
-    gulp.watch(folder.src + '**/*.{xml,txt,json}', ['copy', 'rev'])
+    gulp.watch(folder.src + 'templates/**/*', gulp.series('html', 'rev'));
+    gulp.watch(folder.src + '**/*.{xml,txt,json}', gulp.series('copy', 'rev'));
 });
 
 // Clean Output Directory
@@ -277,19 +270,21 @@ gulp.task('finish', function() {
     return del(folder.temp + '**/*', {force: true});
 });
 
-// Default Task
-gulp.task('default', function() {
+function devFalse(done) {
     devBuild = false;
-    return runSequence(
-        'clean', 'lint', 'css', 'scripts', 'images',
+    done();
+}
+
+// Default Task
+gulp.task('default', gulp.series(
+        devFalse, 'clean', 'lint', 'css', 'scripts', 'images',
         'html', 'copy', 'rev', 'finish'
-    );
-});
+    )
+);
 
 // Dev tasks
-gulp.task('dev', function() {
-    return runSequence(
+gulp.task('dev', gulp.series(
         'clean', 'lint', 'css', 'scripts',
         'images', 'html', 'copy', 'rev', 'watch'
-    );
-});
+    )
+);
